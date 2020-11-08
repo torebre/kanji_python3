@@ -4,6 +4,11 @@ import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 from mpl_toolkits import mplot3d
 
+# from typing import TypedDict
+
+from RelativePositionData import RelativePositionData
+from LineData import LineData
+
 
 def read_data():
     with open('/home/student/workspace/testEncodings/line_relative_position_information_rectangle.json') as input_data:
@@ -13,7 +18,7 @@ def read_data():
 
 def transform_to_array(data):
     total_data_counter = 0
-    for line in data:  # ['relativePositions']:
+    for line in data:
         for _ in line['relativePositions']:
             total_data_counter += len(line['relativePositions'])
 
@@ -21,7 +26,7 @@ def transform_to_array(data):
     position_data = np.zeros(total_data_counter * 3).reshape(total_data_counter, 3)
     counter = 0
 
-    for line in data:  # ['relativePositions']:
+    for line in data:
         for relative_position in line['relativePositions']:
             position_data[counter, 0] = relative_position['rowDiff']
             position_data[counter, 1] = relative_position['colDiff']
@@ -29,6 +34,26 @@ def transform_to_array(data):
             counter += 1
 
     return position_data
+
+# class LinePositionMap(TypedDict):
+#     line_id: int
+#     line_data: LineData
+
+
+def generate_line_data(data):
+    result = {}
+    for line in data:
+        position_data = []
+        for relative_position in line['relativePositions']:
+            position_data.append(RelativePositionData(
+                relative_position['rowDiff'],
+                relative_position['colDiff'],
+                relative_position['angle'],
+                relative_position['otherLine']))
+
+        result[line['id']] = LineData(line['id'], position_data)
+
+    return result
 
 
 def create_cluster(data):
@@ -49,6 +74,9 @@ def diplay_data(data):
 
 if __name__ == '__main__':
     line_data = read_data()
-    data = transform_to_array(line_data)
-    fitted_kmeans = create_cluster(data)
-    diplay_data(data)
+    # data = transform_to_array(line_data)
+    # fitted_kmeans = create_cluster(data)
+    # diplay_data(data)
+
+    line_data_map = generate_line_data(line_data)
+    print("Line data:", line_data_map[1])
