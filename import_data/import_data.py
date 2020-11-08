@@ -2,6 +2,7 @@ import json
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
+from mpl_toolkits import mplot3d
 
 
 def read_data():
@@ -36,8 +37,18 @@ def create_cluster(data):
     kmeans.fit(data)
     print(kmeans.cluster_centers_)
 
+    return kmeans
+
+
+def diplay_data(data):
+    fig = plt.figure()
+    ax = plt.axes(projection='3d')
+    ax.scatter3D(data[:, 0], data[:, 1], data[:, 2])
+    plt.show()
+
 
 if __name__ == '__main__':
     line_data = read_data()
     data = transform_to_array(line_data)
-    create_cluster(data)
+    fitted_kmeans = create_cluster(data)
+    diplay_data(data)
