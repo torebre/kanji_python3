@@ -6,8 +6,10 @@ from mpl_toolkits import mplot3d
 
 # from typing import TypedDict
 
-from RelativePositionData import RelativePositionData
-from LineData import LineData
+from import_data.RelativePositionData import RelativePositionData
+from import_data.LineData import LineData
+
+from import_data.RelationDataExtraction import RelationDataExtraction
 
 
 def read_data():
@@ -79,4 +81,7 @@ if __name__ == '__main__':
     # diplay_data(data)
 
     line_data_map = generate_line_data(line_data)
-    print("Line data:", line_data_map[1])
+    # print("Line data:", line_data_map[1])
+
+    relation_data_extraction = RelationDataExtraction()
+    relation_data_extraction.extract_relation_data_for_all_lines(line_data_map)

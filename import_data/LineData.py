@@ -1,5 +1,5 @@
 from typing import List
-from RelativePositionData import RelativePositionData
+from import_data.RelativePositionData import RelativePositionData
 
 
 class LineData:
