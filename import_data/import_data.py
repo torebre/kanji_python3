@@ -13,6 +13,19 @@ def read_data():
         return data
 
 
+def transform_to_line_code_map(line_data):
+    line_code_map = {}
+
+    for line in line_data:
+        line_code = line["lineCode"]
+
+        for relative_position in line['relativePositions']:
+            line_code_map[(line_code, relative_position['inputLine'], relative_position['otherLine'])] = (
+            relative_position['rowDiff'], relative_position['colDiff'], relative_position['angle'])
+
+    return line_code_map
+
+
 def transform_to_array(data):
     """The columns in the returned matrix are: lineCode, inputLine, otherLine, rowDiff, colDiff and angle."""
     total_data_counter = 0
@@ -43,7 +56,13 @@ def transform_selected_lines_to_array(data, line_code_line_id_include_map):
     total_data_counter = 0
     for line in data:
         if line['lineCode'] in line_code_line_id_include_map:
-            for _ in line['relativePositions']:
+            lines_to_include = line_code_line_id_include_map[line['lineCode']]
+            for relative_position in line['relativePositions']:
+                # TODO This is temporary to see if the lines that are supposed to make out a rectangle stand out clearly in the clusters that are created
+                if relative_position['inputLine'] not in lines_to_include or relative_position[
+                    'otherLine'] not in lines_to_include:
+                    continue
+
                 total_data_counter += 1
 
     number_of_variables = 6
@@ -62,7 +81,8 @@ def transform_selected_lines_to_array(data, line_code_line_id_include_map):
         for relative_position in line['relativePositions']:
 
             # TODO This is temporary to see if the lines that are supposed to make out a rectangle stand out clearly in the clusters that are created
-            if relative_position['inputLine'] not in lines_to_include or relative_position['otherLine'] not in lines_to_include:
+            if relative_position['inputLine'] not in lines_to_include or relative_position[
+                'otherLine'] not in lines_to_include:
                 continue
 
             position_data[counter, 0] = line_code
@@ -74,6 +94,7 @@ def transform_selected_lines_to_array(data, line_code_line_id_include_map):
             counter += 1
 
     return position_data
+
 
 def generate_line_data(data):
     result = {}
@@ -92,6 +113,7 @@ def generate_line_data(data):
 
 
 def filter_out_four_last_lines_of_data(input_line_data):
+    """ Returns a map between line codes (identifying the kanji) and a list with IDs of the four last lines. """
     line_code_line_ids_map = {}
     for line in input_line_data:
         if line['lineCode'] not in line_code_line_ids_map:
