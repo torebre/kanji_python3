@@ -87,6 +87,7 @@ if __name__ == '__main__':
 
     # line_code_line_id_relation_data_map = import_data.transform_to_line_code_map(line_data)
 
+    # The last four lines are the ones that make up a rectangle
     last_four_lines = import_data.filter_out_four_last_lines_of_data(line_data)
 
     array_data = import_data.transform_selected_lines_to_array(line_data, last_four_lines)
