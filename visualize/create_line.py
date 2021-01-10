@@ -98,6 +98,42 @@ def create_line(start_x: int, start_y: int, stop_x: int, stop_y: int):
     return temp_result
 
 
+def draw_lines_matrix(lines):
+    x_min = 100000
+    y_min = 100000
+
+    x_max = -100000
+    y_max = -100000
+
+    for line in lines:
+        (line_min_x, line_min_y) = np.amin(line, axis=0).astype(int)
+
+        if x_min > line_min_x:
+            x_min = line_min_x
+
+        if y_min > line_min_y:
+            y_min = line_min_y
+
+        (line_max_x, line_max_y) = np.amax(line, axis=0).astype(int)
+
+        if x_max < line_max_x:
+            x_max = line_max_x
+
+        if y_max < line_max_y:
+            y_max = line_max_y
+
+    image_matrix = np.full((x_max - x_min + 1, y_max - y_min + 1), 0)
+
+    line_value = 1
+    for line in lines:
+
+        for line_coordinate in line:
+            print(line_coordinate)
+
+
+
+
+
 if __name__ == '__main__':
     line_coordinates = create_line(10, 0, 5, 2)
 
