@@ -5,7 +5,7 @@ def create_line(start_x: int, start_y: int, stop_x: int, stop_y: int):
     if start_x == stop_x:
         # Horizontal line
         rows = abs(stop_y - start_y) + 1
-        result = np.empty((rows, 2))
+        result = np.empty((rows, 2), dtype=np.int32)
 
         if start_y < stop_y:
             result[:, 0] = np.repeat(start_x, rows)
@@ -19,7 +19,7 @@ def create_line(start_x: int, start_y: int, stop_x: int, stop_y: int):
     if start_y == stop_y:
         # Vertical line
         rows = abs(stop_x - start_x) + 1
-        result = np.full((rows, 2), np.NAN)
+        result = np.full((rows, 2), np.NAN, dtype=np.int32)
 
         if start_x < stop_x:
             result[:, 0] = np.arange(start_x, stop_x + 1)
@@ -58,8 +58,8 @@ def create_line(start_x: int, start_y: int, stop_x: int, stop_y: int):
     y = start_y_translate
     new_y = y
 
-    array_shape = (2 * abs(start_x - stop_x) + abs(start_y - stop_y), 2)
-    temp_result = np.full(array_shape, np.NAN)
+    array_shape = (2 * (abs(start_x - stop_x) + abs(start_y - stop_y)), 2)
+    temp_result = np.full(array_shape, -1000, dtype=np.int32)
     counter = 0
 
     for x in np.arange(start_x_translate, stop_x_translate + 1):
@@ -86,7 +86,7 @@ def create_line(start_x: int, start_y: int, stop_x: int, stop_y: int):
             new_y = new_y + sign_y_delta
             error = error - 1
 
-    temp_result = temp_result[~np.isnan(temp_result)].reshape((-1, 2))
+    temp_result = temp_result[temp_result != -1000].reshape((-1, 2))
 
     temp_result[:, 0] = temp_result[:, 0] - first_translate
     temp_result[:, 1] = temp_result[:, 1] - second_translate
@@ -98,7 +98,7 @@ def create_line(start_x: int, start_y: int, stop_x: int, stop_y: int):
     return temp_result
 
 
-def draw_lines_matrix(lines):
+def get_line_matrix(lines):
     x_min = 100000
     y_min = 100000
 
@@ -122,15 +122,21 @@ def draw_lines_matrix(lines):
         if y_max < line_max_y:
             y_max = line_max_y
 
-    image_matrix = np.full((x_max - x_min + 1, y_max - y_min + 1), 0)
+    print(x_min, x_max, y_min, y_max)
+    image_matrix = np.full((x_max - x_min + 1, y_max - y_min + 1), 0, dtype=np.int32)
+
+    x_offset = -x_min
+    y_offset = -y_min
 
     line_value = 1
     for line in lines:
-
         for line_coordinate in line:
-            print(line_coordinate)
+            # print(line_coordinate[0], line_coordinate[1])
+            image_matrix[line_coordinate[0] + x_offset, line_coordinate[1] + y_offset] = line_value
 
+        line_value += 1
 
+    return image_matrix
 
 
 

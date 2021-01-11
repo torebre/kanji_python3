@@ -3,7 +3,10 @@ from import_data import import_line_data
 from import_data import import_data
 import pandas as pd
 from create_line import create_line
-from create_line import draw_lines_matrix
+from create_line import get_line_matrix
+
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 
 
 # def draw_lines(lines):
@@ -43,6 +46,13 @@ if __name__ == '__main__':
 
     print(line_coordinates)
 
-    draw_lines_matrix(line_coordinates)
+    line_matrix = get_line_matrix(line_coordinates)
+
+    # fig = plt.figure()
+
+    plt.matshow(line_matrix)
+    plt.show()
+
+
 
 
