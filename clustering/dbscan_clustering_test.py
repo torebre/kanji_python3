@@ -76,10 +76,10 @@ def extract_cluster_relation_data(line_code_map, last_four_lines_id_map):
             other_line = line_id_index_map[tuple_id[2]]
             cluster_relation_matrix[input_line, other_line] = tuple_values[3]
 
+            print("Input line: ", input_line, ". Other line: ", other_line, ". Values: ", tuple_values[0], tuple_values[1], tuple_values[2])
+
         print("Cluster relation matrix for ", line_code)
         print(cluster_relation_matrix)
-
-
 
 
 if __name__ == '__main__':
@@ -93,17 +93,18 @@ if __name__ == '__main__':
     array_data = import_data.transform_selected_lines_to_array(line_data, last_four_lines)
     line_code_line_id_relation_data_map = extract_line_code_map_from_array(array_data)
 
-    data_used_for_clustering = array_data[:, 3:6]
+    # data_used_for_clustering = array_data[:, 3:6]
+    data_used_for_clustering = array_data[:, 5]
 
-    # # Trying with only angle to see if clusters look as expected
-    # data_used_for_clustering = data[:, 4:6]
-    #
-    # # dbscan_test(data_used_for_clustering.reshape(-1, 1))
-    # # plot_dbscan(data_used_for_clustering)
-    #
-    dbscan_data = do_dbscan(data_used_for_clustering)
+    # Trying with only angle to see if clusters look as expected
+    # data_used_for_clustering = array_data[:, 4:6]
+
+    # dbscan_test(data_used_for_clustering.reshape(-1, 1))
+    # plot_dbscan(data_used_for_clustering)
+
+    # dbscan_data = do_dbscan(data_used_for_clustering)
+    dbscan_data = do_dbscan(np.reshape(data_used_for_clustering, (-1, 1)))
     add_label_data_to_line_code_map(dbscan_data.labels_, array_data, line_code_line_id_relation_data_map)
-    # plot_dbscan(dbscan_data, data)
+    # plot_dbscan(dbscan_data, data_used_for_clustering) #np.reshape(data_used_for_clustering, (len(data_used_for_clustering), 1)))
 
     extract_cluster_relation_data(line_code_line_id_relation_data_map, last_four_lines)
-

@@ -97,8 +97,7 @@ def create_line(start_x: int, start_y: int, stop_x: int, stop_y: int):
 
     return temp_result
 
-
-def get_line_matrix(lines):
+def get_borders(lines):
     x_min = 100000
     y_min = 100000
 
@@ -122,7 +121,11 @@ def get_line_matrix(lines):
         if y_max < line_max_y:
             y_max = line_max_y
 
-    print(x_min, x_max, y_min, y_max)
+    return (x_min, y_min, x_max, y_max)
+
+
+def get_line_matrix(lines):
+    (x_min, y_min, x_max, y_max) = get_borders(lines)
     image_matrix = np.full((x_max - x_min + 1, y_max - y_min + 1), 0, dtype=np.int32)
 
     x_offset = -x_min
@@ -131,7 +134,6 @@ def get_line_matrix(lines):
     line_value = 1
     for line in lines:
         for line_coordinate in line:
-            # print(line_coordinate[0], line_coordinate[1])
             image_matrix[line_coordinate[0] + x_offset, line_coordinate[1] + y_offset] = line_value
 
         line_value += 1

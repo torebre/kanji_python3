@@ -8,7 +8,7 @@ from import_data.LineData import LineData
 
 def read_data():
     with open(
-            '/home/student/workspace/testEncodings/line_relative_position_information_rectangle_v2.json') as input_data:
+            '/home/student/workspace/testEncodings/line_relative_position_information_rectangle_v3.json') as input_data:
         data = json.load(input_data)
         return data
 

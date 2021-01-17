@@ -1,27 +1,16 @@
-import numpy as np
-from import_data import import_line_data
-from import_data import import_data
-import pandas as pd
-from create_line import create_line
-from create_line import get_line_matrix
-
 import matplotlib.pyplot as plt
-import matplotlib.cm as cm
+import numpy as np
+import pandas as pd
 
+from visualize.create_line import create_line
+from visualize.create_line import get_line_matrix
+from import_data import import_line_data
 
-# def draw_lines(lines):
-#     np.full((4, 4), np.nan)
-#     for line in lines:
-#
-#
-#         pass
 
 def generate_line_coordinates(line_data_frame: pd.DataFrame):
     lines = []
 
     for index, line in line_data_frame.iterrows():
-        # print("Line: ", line)
-
         angle = line['angle']
         line_length = line['length']
         start_x = line['start_x'].astype(int)
@@ -43,16 +32,9 @@ if __name__ == '__main__':
     line_data_1 = line_data[is_line_1]
 
     line_coordinates = generate_line_coordinates(line_data_1)
-
-    print(line_coordinates)
-
     line_matrix = get_line_matrix(line_coordinates)
 
     # fig = plt.figure()
 
     plt.matshow(line_matrix)
     plt.show()
-
-
-
-
