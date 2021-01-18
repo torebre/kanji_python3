@@ -63,27 +63,33 @@ def extract_line_code_map_from_array(array_data):
 
 def extract_cluster_relation_data(line_code_map, last_four_lines_id_map):
     for line_code, relation_data in line_code_map.items():
-        cluster_relation_matrix = np.full((4, 4), np.nan)
+        extract_rectangle_relation_data_for_line_code(line_code, line_code_map, last_four_lines_id_map)
 
-        line_id_index_map = {}
 
-        print("Line code: ", line_code)
-        for key, value in enumerate(last_four_lines_id_map[line_code]):
-            line_id_index_map[value] = key
+def extract_rectangle_relation_data_for_line_code(line_code, line_code_map, last_four_lines_id_map):
+    relation_data = line_code_map[line_code]
+    cluster_relation_matrix = np.full((4, 4), np.nan)
 
-        for tuple_id, tuple_values in relation_data.items():
-            input_line = line_id_index_map[tuple_id[1]]
-            other_line = line_id_index_map[tuple_id[2]]
-            cluster_relation_matrix[input_line, other_line] = tuple_values[3]
+    line_id_index_map = {}
 
-            print("Input line: ", input_line, ". Other line: ", other_line, ". Values: ", tuple_values[0], tuple_values[1], tuple_values[2])
+    print("Line code: ", line_code)
+    for key, value in enumerate(last_four_lines_id_map[line_code]):
+        line_id_index_map[value] = key
 
-        print("Cluster relation matrix for ", line_code)
-        print(cluster_relation_matrix)
+    for tuple_id, tuple_values in relation_data.items():
+        input_line = line_id_index_map[tuple_id[1]]
+        other_line = line_id_index_map[tuple_id[2]]
+        cluster_relation_matrix[input_line, other_line] = tuple_values[3]
+
+        print("Input line: ", input_line, ". Other line: ", other_line, ". Values: ", tuple_values[0], tuple_values[1],
+              tuple_values[2])
+
+    print("Cluster relation matrix for ", line_code)
+    print(cluster_relation_matrix)
 
 
 if __name__ == '__main__':
-    line_data = import_data.read_data()
+    line_data = import_data.read_relation_data()
 
     # line_code_line_id_relation_data_map = import_data.transform_to_line_code_map(line_data)
 

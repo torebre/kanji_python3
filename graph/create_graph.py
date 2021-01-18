@@ -6,7 +6,7 @@ from graph import LineGraph
 
 
 if __name__ == '__main__':
-    line_data = import_data.read_data()
+    line_data = import_data.read_relation_data()
 
     line_relation_data = import_data.transform_to_array(line_data)
 

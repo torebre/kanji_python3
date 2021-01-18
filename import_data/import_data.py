@@ -6,7 +6,7 @@ from import_data.RelativePositionData import RelativePositionData
 from import_data.LineData import LineData
 
 
-def read_data():
+def read_relation_data():
     with open(
             '/home/student/workspace/testEncodings/line_relative_position_information_rectangle_v3.json') as input_data:
         data = json.load(input_data)
@@ -137,7 +137,7 @@ def display_data(data):
 
 
 if __name__ == '__main__':
-    line_data = read_data()
+    line_data = read_relation_data()
 
     # data = transform_to_array(line_data)
     # line_data_map = generate_line_data(line_data)

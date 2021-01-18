@@ -21,7 +21,7 @@ def plot_dendrogram(linkage_data):
 
 
 if __name__ == '__main__':
-    line_data = import_data.read_data()
+    line_data = import_data.read_relation_data()
     last_four_lines = import_data.filter_out_four_last_lines_of_data(line_data)
 
     data = import_data.transform_selected_lines_to_array(line_data, last_four_lines)
