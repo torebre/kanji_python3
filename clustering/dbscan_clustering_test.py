@@ -88,6 +88,23 @@ def extract_rectangle_relation_data_for_line_code(line_code, line_code_map, last
     print(cluster_relation_matrix)
 
 
+def get_sets_of_relation_data_for_last_four_lines(line_code, line_code_map, last_four_lines_id_map):
+    relation_data = line_code_map[line_code]
+
+    # Four lines, put the cluster type of the relations
+    # to the other lines into four sets
+    relation_sets = [set(), set(), set(), set()]
+    line_id_index_map = {}
+
+    for key, value in enumerate(last_four_lines_id_map[line_code]):
+        line_id_index_map[value] = key
+
+    for tuple_id, tuple_values in relation_data.items():
+        relation_sets[line_id_index_map[tuple_id[1]]].add(tuple_values[3])
+
+    return relation_sets
+
+
 if __name__ == '__main__':
     line_data = import_data.read_relation_data()
 
@@ -114,3 +131,10 @@ if __name__ == '__main__':
     # plot_dbscan(dbscan_data, data_used_for_clustering) #np.reshape(data_used_for_clustering, (len(data_used_for_clustering), 1)))
 
     extract_cluster_relation_data(line_code_line_id_relation_data_map, last_four_lines)
+
+    first_line_code = next(iter(line_code_line_id_relation_data_map))
+    relation_sets_for_line_code = get_sets_of_relation_data_for_last_four_lines(first_line_code,
+                                                                                line_code_line_id_relation_data_map,
+                                                                                last_four_lines)
+
+    print("Relation sets: ", relation_sets_for_line_code)
