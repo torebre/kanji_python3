@@ -2,8 +2,12 @@ from import_data import import_data
 
 import numpy as np
 from sklearn.cluster import DBSCAN
-
 import matplotlib.pyplot as plt
+from typing import Dict, Tuple
+
+from import_data.import_data import LastFourLinesMap
+
+LineCodeMap = Dict[int, Dict[Tuple[int, int, int], Tuple[int, int, float]]]
 
 
 def do_dbscan(distance_data):
@@ -46,7 +50,7 @@ def add_label_data_to_line_code_map(dbscan_labels, array_data, line_code_map):
         index += 1
 
 
-def extract_line_code_map_from_array(array_data):
+def extract_line_code_map_from_array(array_data) -> LineCodeMap:
     """The columns assumed to be in the array are: lineCode, inputLine, otherLine, rowDiff, colDiff and angle."""
 
     line_code_map = {}
@@ -62,8 +66,12 @@ def extract_line_code_map_from_array(array_data):
 
 
 def extract_cluster_relation_data(line_code_map, last_four_lines_id_map):
+    line_code_relation_last_four_lines_relation_matrix_map = {}
     for line_code, relation_data in line_code_map.items():
-        extract_rectangle_relation_data_for_line_code(line_code, line_code_map, last_four_lines_id_map)
+        line_code_relation_last_four_lines_relation_matrix_map[
+            line_code] = extract_rectangle_relation_data_for_line_code(line_code, line_code_map, last_four_lines_id_map)
+
+    return line_code_relation_last_four_lines_relation_matrix_map
 
 
 def extract_rectangle_relation_data_for_line_code(line_code, line_code_map, last_four_lines_id_map):
@@ -72,7 +80,7 @@ def extract_rectangle_relation_data_for_line_code(line_code, line_code_map, last
 
     line_id_index_map = {}
 
-    print("Line code: ", line_code)
+    # print("Line code: ", line_code)
     for key, value in enumerate(last_four_lines_id_map[line_code]):
         line_id_index_map[value] = key
 
@@ -81,11 +89,13 @@ def extract_rectangle_relation_data_for_line_code(line_code, line_code_map, last
         other_line = line_id_index_map[tuple_id[2]]
         cluster_relation_matrix[input_line, other_line] = tuple_values[3]
 
-        print("Input line: ", input_line, ". Other line: ", other_line, ". Values: ", tuple_values[0], tuple_values[1],
-              tuple_values[2])
+        # print("Input line: ", input_line, ". Other line: ", other_line, ". Values: ", tuple_values[0], tuple_values[1],
+        #       tuple_values[2])
 
-    print("Cluster relation matrix for ", line_code)
-    print(cluster_relation_matrix)
+    # print("Cluster relation matrix for ", line_code)
+    # print(cluster_relation_matrix)
+
+    return cluster_relation_matrix
 
 
 def get_sets_of_relation_data_for_last_four_lines(line_code, line_code_map, last_four_lines_id_map):
@@ -93,16 +103,28 @@ def get_sets_of_relation_data_for_last_four_lines(line_code, line_code_map, last
 
     # Four lines, put the cluster type of the relations
     # to the other lines into four sets
-    relation_sets = [set(), set(), set(), set()]
+    relation_sets = [list(), list(), list(), list()]
     line_id_index_map = {}
 
     for key, value in enumerate(last_four_lines_id_map[line_code]):
         line_id_index_map[value] = key
 
     for tuple_id, tuple_values in relation_data.items():
-        relation_sets[line_id_index_map[tuple_id[1]]].add(tuple_values[3])
+        relation_sets[line_id_index_map[tuple_id[1]]].append(tuple_values[3])
 
     return relation_sets
+
+
+def find_relation_sets_for_all_last_four_lines(last_four_lines: LastFourLinesMap,
+                                               line_code_line_id_relation_data_map: LineCodeMap):
+    line_code_relation_sets_map = {}
+    for key in last_four_lines:
+        relation_sets_for_line_code = get_sets_of_relation_data_for_last_four_lines(key,
+                                                                                    line_code_line_id_relation_data_map,
+                                                                                    last_four_lines)
+        line_code_relation_sets_map[key] = relation_sets_for_line_code
+
+    return line_code_relation_sets_map
 
 
 if __name__ == '__main__':
@@ -111,10 +133,10 @@ if __name__ == '__main__':
     # line_code_line_id_relation_data_map = import_data.transform_to_line_code_map(line_data)
 
     # The last four lines are the ones that make up a rectangle
-    last_four_lines = import_data.filter_out_four_last_lines_of_data(line_data)
+    last_four_lines: LastFourLinesMap = import_data.filter_out_four_last_lines_of_data(line_data)
 
     array_data = import_data.transform_selected_lines_to_array(line_data, last_four_lines)
-    line_code_line_id_relation_data_map = extract_line_code_map_from_array(array_data)
+    line_code_line_id_relation_data_map: LineCodeMap = extract_line_code_map_from_array(array_data)
 
     # data_used_for_clustering = array_data[:, 3:6]
     data_used_for_clustering = array_data[:, 5]
@@ -132,9 +154,13 @@ if __name__ == '__main__':
 
     extract_cluster_relation_data(line_code_line_id_relation_data_map, last_four_lines)
 
-    first_line_code = next(iter(line_code_line_id_relation_data_map))
-    relation_sets_for_line_code = get_sets_of_relation_data_for_last_four_lines(first_line_code,
-                                                                                line_code_line_id_relation_data_map,
-                                                                                last_four_lines)
+    # first_line_code = next(iter(line_code_line_id_relation_data_map))
+    # relation_sets_for_line_code = get_sets_of_relation_data_for_last_four_lines(first_line_code,
+    #                                                                             line_code_line_id_relation_data_map,
+    #                                                                             last_four_lines)
+    # print("Relation sets: ", relation_sets_for_line_code)
 
-    print("Relation sets: ", relation_sets_for_line_code)
+    relation_sets = find_relation_sets_for_all_last_four_lines(last_four_lines, line_code_line_id_relation_data_map)
+    for key in relation_sets:
+        print(key, ": ", relation_sets[key])
+

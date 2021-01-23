@@ -5,6 +5,10 @@ import matplotlib.pyplot as plt
 from import_data.RelativePositionData import RelativePositionData
 from import_data.LineData import LineData
 
+from typing import Dict, List
+
+LastFourLinesMap = Dict[int, List[int]]
+
 
 def read_relation_data():
     with open(
@@ -21,7 +25,7 @@ def transform_to_line_code_map(line_data):
 
         for relative_position in line['relativePositions']:
             line_code_map[(line_code, relative_position['inputLine'], relative_position['otherLine'])] = (
-            relative_position['rowDiff'], relative_position['colDiff'], relative_position['angle'])
+                relative_position['rowDiff'], relative_position['colDiff'], relative_position['angle'])
 
     return line_code_map
 
@@ -112,7 +116,7 @@ def generate_line_data(data):
     return result
 
 
-def filter_out_four_last_lines_of_data(input_line_data):
+def filter_out_four_last_lines_of_data(input_line_data) -> LastFourLinesMap:
     """ Returns a map between line codes (identifying the kanji) and a list with IDs of the four last lines. """
     line_code_line_ids_map = {}
     for line in input_line_data:
