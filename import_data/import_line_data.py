@@ -7,7 +7,8 @@ import pandas as pandas
 #         data = json.load(input_data)
 #         return data
 
-
+# The columns in the file are:
+# "unicode","line_number","angle","length","start_x","start_y"
 def read_data() -> pandas.DataFrame:
     return pandas.read_csv('/home/student/workspace/kanjiR/training_data.csv')
 

@@ -7,6 +7,7 @@ from typing import Dict, Tuple
 
 from import_data.import_data import LastFourLinesMap
 
+# The map has the line_code as key. The second key is (line code, input line, other line). The values are (row difference, column difference and angle)
 LineCodeMap = Dict[int, Dict[Tuple[int, int, int], Tuple[int, int, float]]]
 
 
@@ -48,7 +49,6 @@ def add_label_data_to_line_code_map(dbscan_labels, array_data, line_code_map):
         new_tuple = line_code_map[row[0]][(row[0], row[1], row[2])] + (dbscan_labels[index],)
         line_code_map[row[0]][(row[0], row[1], row[2])] = new_tuple
         index += 1
-
 
 def extract_line_code_map_from_array(array_data) -> LineCodeMap:
     """The columns assumed to be in the array are: lineCode, inputLine, otherLine, rowDiff, colDiff and angle."""
@@ -98,7 +98,7 @@ def extract_rectangle_relation_data_for_line_code(line_code, line_code_map, last
     return cluster_relation_matrix
 
 
-def get_sets_of_relation_data_for_last_four_lines(line_code, line_code_map, last_four_lines_id_map):
+def get_sets_of_relation_data_for_last_four_lines(line_code, line_code_map: LineCodeMap, last_four_lines_id_map: LastFourLinesMap):
     relation_data = line_code_map[line_code]
 
     # Four lines, put the cluster type of the relations
