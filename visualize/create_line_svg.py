@@ -8,7 +8,7 @@ from visualize.DrawLines import generate_line_coordinates
 from visualize.create_line import get_borders
 
 
-def draw_line(start_x: int, start_y: int, stop_x: int, stop_y: int, canvas, stroke_colour='white', stroke_width=5):
+def draw_line(start_x: int, start_y: int, stop_x: int, stop_y: int, canvas, stroke_colour='white', stroke_width=2):
     canvas.append(draw.Line(start_x, start_y, stop_x, stop_y, stroke=stroke_colour, stroke_width=stroke_width))
 
 
@@ -94,10 +94,10 @@ def draw_line_with_colours(start_x, start_y, stop_x, stop_y, drawing: Drawing, c
 if __name__ == '__main__':
     line_data = import_line_data.read_data()
 
-    is_line_1 = line_data['unicode'] == 1
+    is_line_1 = line_data['unicode'] == 86
     line_data_1 = line_data[is_line_1]
 
-    colour_map = {1.0: ["green", "yellow", "red"]}
+    colour_map = {1.0: ["#1248ff", "#fefefe", "red"]}
     canvas = create_canvas2(line_data_1, colour_map)
     canvas.setPixelScale(5)
     canvas.savePng('test_output_svg.png')

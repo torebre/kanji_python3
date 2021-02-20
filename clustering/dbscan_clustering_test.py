@@ -3,12 +3,15 @@ from import_data import import_data
 import numpy as np
 from sklearn.cluster import DBSCAN
 import matplotlib.pyplot as plt
-from typing import Dict, Tuple
+from typing import Dict, Tuple, List
 
+from import_data.RelationData import RelationData
 from import_data.import_data import LastFourLinesMap
 
 # The map has the line_code as key. The second key is (line code, input line, other line). The values are (row difference, column difference and angle)
 LineCodeMap = Dict[int, Dict[Tuple[int, int, int], Tuple[int, int, float]]]
+
+LineLineColourMap = Dict[int, Dict[int, int]]
 
 
 def do_dbscan(distance_data):
@@ -49,6 +52,7 @@ def add_label_data_to_line_code_map(dbscan_labels, array_data, line_code_map):
         new_tuple = line_code_map[row[0]][(row[0], row[1], row[2])] + (dbscan_labels[index],)
         line_code_map[row[0]][(row[0], row[1], row[2])] = new_tuple
         index += 1
+
 
 def extract_line_code_map_from_array(array_data) -> LineCodeMap:
     """The columns assumed to be in the array are: lineCode, inputLine, otherLine, rowDiff, colDiff and angle."""
@@ -98,7 +102,8 @@ def extract_rectangle_relation_data_for_line_code(line_code, line_code_map, last
     return cluster_relation_matrix
 
 
-def get_sets_of_relation_data_for_last_four_lines(line_code, line_code_map: LineCodeMap, last_four_lines_id_map: LastFourLinesMap):
+def get_sets_of_relation_data_for_last_four_lines(line_code, line_code_map: LineCodeMap,
+                                                  last_four_lines_id_map: LastFourLinesMap):
     relation_data = line_code_map[line_code]
 
     # Four lines, put the cluster type of the relations
@@ -106,13 +111,18 @@ def get_sets_of_relation_data_for_last_four_lines(line_code, line_code_map: Line
     relation_sets = [list(), list(), list(), list()]
     line_id_index_map = {}
 
+    relation_data_list = []
     for key, value in enumerate(last_four_lines_id_map[line_code]):
-        line_id_index_map[value] = key
+        line_id_index_map[value] = RelationData(value)
 
     for tuple_id, tuple_values in relation_data.items():
-        relation_sets[line_id_index_map[tuple_id[1]]].append(tuple_values[3])
+        relation_data = line_id_index_map[tuple_id[1]]
 
-    return relation_sets
+        relation_data.other_lines_cluster_map[tuple_id[2]] = tuple_values[3]
+        # relation_sets[key].append(tuple_values[3])
+
+    return line_id_index_map.values()
+    # return relation_sets
 
 
 def find_relation_sets_for_all_last_four_lines(last_four_lines: LastFourLinesMap,
@@ -125,6 +135,42 @@ def find_relation_sets_for_all_last_four_lines(last_four_lines: LastFourLinesMap
         line_code_relation_sets_map[key] = relation_sets_for_line_code
 
     return line_code_relation_sets_map
+
+
+def generate_color_map_for_line(relation_data: RelationData, cluster_color_map: dict) -> LineLineColourMap:
+    color_map = {}
+
+    for key in relation_data.other_lines_cluster_map:
+        cluster_id = relation_data.other_lines_cluster_map[key]
+        color_map[key] = cluster_color_map[cluster_id]
+
+    return color_map
+
+
+def create_line_colour_map_for_line_code(line_code: int, line_code_relation_sets_map: dict, cluster_colour_map: dict) -> dict:
+    line_to_line_colour_map = {}
+
+    for relation_data in line_code_relation_sets_map[line_code]:
+        line_line_colour_map = generate_color_map_for_line(relation_data, cluster_colour_map)
+
+        for first_line_id in line_line_colour_map:
+            line_colours = line_line_colour_map[first_line_id]
+            line_to_line_colour_map[(relation_data.line_id, first_line_id)] = line_colours
+
+    return line_to_line_colour_map
+
+
+def create_cluster_colour_map(distinct_labels: list) -> dict:
+    number_of_clusters = len(distinct_labels)
+    cluster_colour_map = {}
+    counter = 0
+    diff = 255 / number_of_clusters
+
+    for label in distinct_labels:
+        cluster_colour_map[label] = '#%02x%02x%02x' % (int(counter), int(counter), 0)
+        counter += diff
+
+    return cluster_colour_map
 
 
 if __name__ == '__main__':
@@ -152,6 +198,8 @@ if __name__ == '__main__':
     add_label_data_to_line_code_map(dbscan_data.labels_, array_data, line_code_line_id_relation_data_map)
     # plot_dbscan(dbscan_data, data_used_for_clustering) #np.reshape(data_used_for_clustering, (len(data_used_for_clustering), 1)))
 
+    distinct_labels = set(dbscan_data.labels_)
+
     extract_cluster_relation_data(line_code_line_id_relation_data_map, last_four_lines)
 
     # first_line_code = next(iter(line_code_line_id_relation_data_map))
@@ -160,8 +208,24 @@ if __name__ == '__main__':
     #                                                                             last_four_lines)
     # print("Relation sets: ", relation_sets_for_line_code)
 
+    line_to_line_colour_map = {}
+
     relation_sets = find_relation_sets_for_all_last_four_lines(last_four_lines, line_code_line_id_relation_data_map)
-    for key in relation_sets:
-        print(key, ": ", relation_sets[key])
+    # for key in relation_sets:
+    #     print(key, ":")
+    #     for relation_data in relation_sets[key]:
+    #         print(relation_data)
+    #
+    #         line_line_colour_map = generate_color_map_for_line(relation_data, cluster_colour_map)
+    #
+    #         # print("Line colour map:", line_line_colour_map)
+    #
+    #         for first_line_id in line_line_colour_map:
+    #             line_colours = line_line_colour_map[first_line_id]
+    #             line_to_line_colour_map[(key, first_line_id)] = line_colours
+    #
+    # print("Line to line colour map: ", line_to_line_colour_map)
 
+    # colour_map = create_line_colour_map(relation_sets)
 
+    # print("Colour map:", colour_map)
