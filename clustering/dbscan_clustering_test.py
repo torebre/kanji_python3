@@ -3,7 +3,7 @@ from import_data import import_data
 import numpy as np
 from sklearn.cluster import DBSCAN
 import matplotlib.pyplot as plt
-from typing import Dict, Tuple, List
+from typing import Dict, Tuple, List, ValuesView
 
 from import_data.RelationData import RelationData
 from import_data.import_data import LastFourLinesMap
@@ -126,8 +126,8 @@ def get_sets_of_relation_data_for_last_four_lines(line_code, line_code_map: Line
 
 
 def find_relation_sets_for_all_last_four_lines(last_four_lines: LastFourLinesMap,
-                                               line_code_line_id_relation_data_map: LineCodeMap):
-    line_code_relation_sets_map = {}
+                                               line_code_line_id_relation_data_map: LineCodeMap) -> Dict[int, ValuesView[RelationData]]:
+    line_code_relation_sets_map: Dict[int, ValuesView[RelationData]] = {}
     for key in last_four_lines:
         relation_sets_for_line_code = get_sets_of_relation_data_for_last_four_lines(key,
                                                                                     line_code_line_id_relation_data_map,
@@ -147,7 +147,8 @@ def generate_color_map_for_line(relation_data: RelationData, cluster_color_map: 
     return color_map
 
 
-def create_line_colour_map_for_line_code(line_code: int, line_code_relation_sets_map: dict, cluster_colour_map: dict) -> dict:
+def create_line_colour_map_for_line_code(line_code: int, line_code_relation_sets_map: dict,
+                                         cluster_colour_map: dict) -> dict:
     line_to_line_colour_map = {}
 
     for relation_data in line_code_relation_sets_map[line_code]:

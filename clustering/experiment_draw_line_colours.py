@@ -1,5 +1,4 @@
 from import_data import import_line_data
-from visualize.create_line_svg import create_canvas, create_canvas2
 import numpy as np
 from import_data.import_data import filter_out_four_last_lines_of_data, transform_selected_lines_to_array, read_relation_data
 from clustering.dbscan_clustering_test import extract_line_code_map_from_array, \
@@ -24,11 +23,11 @@ line_code = 89
 extract_rectangle_relation_data_for_line_code(line_code, line_code_line_id_relation_data_map, last_four_lines)
 
 relation_sets = find_relation_sets_for_all_last_four_lines(last_four_lines, line_code_line_id_relation_data_map)
-# for key in relation_sets:
-#     print(key, ":")
-#     for relation_data in relation_sets[key]:
-#         print(relation_data)
-#
+for key in relation_sets:
+    print(key, ":")
+    for relation_data in relation_sets[key]:
+        print(relation_data)
+
 #         line_line_colour_map = generate_color_map_for_line(relation_data, cluster_colour_map)
 #
 #         # print("Line colour map:", line_line_colour_map)
@@ -63,6 +62,6 @@ line_data_1 = line_data[is_line_1]
 # canvas = create_canvas(line_data_1)
 
 # colour_map = {1.0: ["green", "yellow", "red"]}
-canvas = create_canvas2(line_data_1, transformed_colour_map)
-canvas.setPixelScale(5)
-canvas.savePng('test_output_svg2.png')
+# canvas = create_canvas2(line_data_1, transformed_colour_map)
+# canvas.setPixelScale(5)
+# canvas.savePng('test_output_svg2.png')
