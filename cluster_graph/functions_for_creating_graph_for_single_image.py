@@ -4,8 +4,8 @@ from import_data.RelationData import RelationData
 from typing import Dict, Tuple, List, ValuesView
 
 
-def create_cluster_from_relation_data(relation_data: ValuesView[RelationData]) -> nx.Graph:
-    line_graph = nx.Graph()
+def create_cluster_from_relation_data(relation_data: ValuesView[RelationData]) -> nx.DiGraph:
+    line_graph = nx.DiGraph()
 
     for entry in relation_data:
         line_graph.add_node(entry.line_id)
