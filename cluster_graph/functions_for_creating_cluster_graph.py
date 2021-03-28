@@ -44,3 +44,19 @@ def add_path_step(line_code: int, current_node, from_node_label: str, step_count
         taboo_list.add(neighbour)
 
         add_path_step(line_code, neighbour, to_node_label, step_count + 1, line_graph, graph, taboo_list)
+
+
+def find_paths(start_node_label: str, current_edge: dict, graph: nx.MultiDiGraph):
+
+
+    for neighbour in graph.neighbors(start_node_label):
+        node_attributes = nx.get_node_attributes(graph, neighbour)
+
+        edge_data = graph.get_edge_data(start_node_label, neighbour)
+
+
+        # TODO
+
+
+
+

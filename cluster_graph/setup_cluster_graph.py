@@ -46,8 +46,20 @@ if __name__ == '__main__':
     for node in cluster_graph.nodes:
         print(node)
 
+        for neighbour in cluster_graph.neighbors(node):
+            edge_data = cluster_graph.get_edge_data(node, neighbour)
+
+            for key in edge_data:
+                edge_data[key]
+
+
+            print(edge_data)
+
+
+
+
     # nx.write_gexf(cluster_graph, 'test_cluster_graph_export2.gexf')
-    nx.write_graphml(cluster_graph, 'test_cluster_graph_export2.graphml')
+    # nx.write_graphml(cluster_graph, 'test_cluster_graph_export2.graphml')
 
     # nx.draw(cluster_graph)
     # plt.draw()
