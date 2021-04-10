@@ -27,7 +27,8 @@ def add_data_from_single_image_graph_to_cluster_graph2(line_code: int, line_grap
         add_path_step(line_code, node, '1', 1, line_graph, graph, set())
 
 
-def add_path_step(line_code: int, current_node, from_node_label: str, step_count: int, line_graph: nx.DiGraph, graph: nx.MultiDiGraph,
+def add_path_step(line_code: int, current_node, from_node_label: str, step_count: int, line_graph: nx.DiGraph,
+                  graph: nx.MultiDiGraph,
                   taboo_list: Set[int]):
     if step_count == 5:
         return
@@ -46,17 +47,28 @@ def add_path_step(line_code: int, current_node, from_node_label: str, step_count
         add_path_step(line_code, neighbour, to_node_label, step_count + 1, line_graph, graph, taboo_list)
 
 
-def find_paths(start_node_label: str, current_edge: dict, graph: nx.MultiDiGraph):
+def create_graph_showing_number_of_paths(start_node_label: str,
+                                         cluster_graph: nx.MultiDiGraph) -> nx.DiGraph:
+    graph = nx.DiGraph()
+    graph.add_node(start_node_label)
+    process_neighbours(start_node_label, graph, cluster_graph)
+
+    return graph
 
 
-    for neighbour in graph.neighbors(start_node_label):
-        node_attributes = nx.get_node_attributes(graph, neighbour)
+def process_neighbours(start_node_label: str, graph: nx.DiGraph, cluster_graph: nx.MultiDiGraph):
+    for neighbour in cluster_graph.neighbors(start_node_label):
+        node_attributes = nx.get_node_attributes(cluster_graph, neighbour)
+        edge_data = cluster_graph.get_edge_data(start_node_label, neighbour)
 
-        edge_data = graph.get_edge_data(start_node_label, neighbour)
+        print("Neighbour:", neighbour)
+        print("Node attributes:", node_attributes)
+        print("Edge data:", len(edge_data))
 
+        graph.add_node(neighbour)
 
-        # TODO
+        # Create an edge with an attribute saying how many
+        # edges there are between the nodes in the multigraph
+        graph.add_edge(start_node_label, neighbour, number_of_edges=len(edge_data))
 
-
-
-
+        process_neighbours(neighbour, graph, cluster_graph)
