@@ -45,15 +45,17 @@ def create_and_print_cluster_graph():
     cluster_graph: nx.MultiDiGraph = setup_graph_type_2()
 
     for node in cluster_graph.nodes:
-        print(node)
+        # print(node)
 
         for neighbour in cluster_graph.neighbors(node):
+            print('From: ', node, '. To: ', neighbour)
+
             edge_data = cluster_graph.get_edge_data(node, neighbour)
 
             for key in edge_data:
-                edge_data[key]
+                print("Edge: ", edge_data[key])
 
-            print(edge_data)
+            # print(edge_data)
 
     # nx.write_gexf(cluster_graph, 'test_cluster_graph_export2.gexf')
     # nx.write_graphml(cluster_graph, 'test_cluster_graph_export2.graphml')
@@ -75,4 +77,6 @@ def create_and_show_graph_with_number_of_edges():
 
 
 if __name__ == '__main__':
-    create_and_show_graph_with_number_of_edges()
+    # create_and_show_graph_with_number_of_edges()
+    create_and_print_cluster_graph()
+

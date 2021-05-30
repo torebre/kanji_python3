@@ -1,6 +1,6 @@
-import networkx as nx
-
 from typing import Set
+
+import networkx as nx
 
 
 def setup_base_cluster_graph(cluster_ids: Set[int]) -> nx.MultiDiGraph:
@@ -40,11 +40,26 @@ def add_path_step(line_code: int, current_node, from_node_label: str, step_count
         edge = line_graph.get_edge_data(current_node, neighbour)
         cluster_number = edge['cluster']
         to_node_label = str(step_count + 1) + '_' + str(cluster_number)
-        graph.add_edge(from_node_label, to_node_label, line_code=line_code,
-                       from_node=current_node, to_node=neighbour, cluster=cluster_number)
-        taboo_list.add(neighbour)
 
-        add_path_step(line_code, neighbour, to_node_label, step_count + 1, line_graph, graph, taboo_list)
+        existing_edges = graph.get_edge_data(from_node_label, to_node_label, default=None)
+        if not edge_exists(existing_edges, line_code, current_node, neighbour):
+            graph.add_edge(from_node_label, to_node_label, line_code=line_code,
+                           from_node=current_node, to_node=neighbour, cluster=cluster_number)
+            taboo_list.add(neighbour)
+            add_path_step(line_code, neighbour, to_node_label, step_count + 1, line_graph, graph, taboo_list)
+
+
+def edge_exists(existing_edges: dict, line_code, current_node, neighbour) -> bool:
+    if existing_edges is not None:
+        for existing_edge in existing_edges:
+            existing_edge_data = existing_edges[existing_edge]
+
+            if existing_edge_data['line_code'] == line_code and existing_edge_data['from_node'] == current_node and \
+                    existing_edge_data['to_node'] == neighbour:
+                # Only include the edge once per line code
+                return True
+
+    return False
 
 
 def create_graph_showing_number_of_paths(start_node_label: str,
