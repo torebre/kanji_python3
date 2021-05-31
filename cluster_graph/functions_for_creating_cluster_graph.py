@@ -1,6 +1,14 @@
-from typing import Set
+from typing import Set, List, Dict, ValuesView
 
 import networkx as nx
+import numpy as np
+
+from cluster_graph.LineClustering import LineClustering
+from clustering.dbscan_clustering_test import LineCodeMap, extract_line_code_map_from_array, do_dbscan, \
+    add_label_data_to_line_code_map, extract_cluster_relation_data, find_relation_sets_for_all_last_four_lines
+from import_data import import_data
+from import_data.RelationData import RelationData
+from import_data.import_data import IntegerToListOfIntegerMap
 
 
 def setup_base_cluster_graph(cluster_ids: Set[int]) -> nx.MultiDiGraph:
@@ -87,3 +95,62 @@ def process_neighbours(start_node_label: str, graph: nx.DiGraph, cluster_graph: 
         graph.add_edge(start_node_label, neighbour, number_of_edges=len(edge_data))
 
         process_neighbours(neighbour, graph, cluster_graph)
+
+
+def create_cluster_using_last_four_lines(line_data: List[Dict]) -> LineClustering:
+    line_data = line_data
+
+    # The last four lines are the ones that make up a rectangle
+    last_four_lines: IntegerToListOfIntegerMap = import_data.filter_out_four_last_lines_of_data(line_data)
+
+    array_data = import_data.transform_selected_lines_to_array(line_data, last_four_lines)
+    line_code_line_id_relation_data_map: LineCodeMap = extract_line_code_map_from_array(array_data)
+
+    # data_used_for_clustering = array_data[:, 3:6]
+    data_used_for_clustering = array_data[:, 5]
+
+    # Trying with only angle to see if clusters look as expected
+    # data_used_for_clustering = array_data[:, 4:6]
+
+    # dbscan_test(data_used_for_clustering.reshape(-1, 1))
+    # plot_dbscan(data_used_for_clustering)
+
+    # dbscan_data = do_dbscan(data_used_for_clustering)
+    dbscan_data = do_dbscan(np.reshape(data_used_for_clustering, (-1, 1)))
+    add_label_data_to_line_code_map(dbscan_data.labels_, array_data, line_code_line_id_relation_data_map)
+
+    distinct_labels = set(dbscan_data.labels_)
+
+    extract_cluster_relation_data(line_code_line_id_relation_data_map, last_four_lines)
+
+    relation_sets: Dict[int, ValuesView[RelationData]] = find_relation_sets_for_all_last_four_lines(
+        last_four_lines,
+        line_code_line_id_relation_data_map)
+
+    # TODO Update constructor
+    return LineClustering(line_data, last_four_lines, distinct_labels, relation_sets)
+
+
+def create_cluster_using_all_lines(line_data: List[Dict]):
+    line_map: IntegerToListOfIntegerMap = import_data.setup_line_data_map(line_data)
+    array_data = import_data.transform_selected_lines_to_array(line_data, line_map)
+    line_code_line_id_relation_data_map: LineCodeMap = extract_line_code_map_from_array(array_data)
+
+    data_used_for_clustering = array_data[:, 4:6]
+
+    # dbscan_test(data_used_for_clustering.reshape(-1, 1))
+    # plot_dbscan(data_used_for_clustering)
+
+    dbscan_data = do_dbscan(data_used_for_clustering)
+    # dbscan_data = do_dbscan(np.reshape(data_used_for_clustering, (-1, 1)))
+    add_label_data_to_line_code_map(dbscan_data.labels_, array_data, line_code_line_id_relation_data_map)
+
+    distinct_labels = set(dbscan_data.labels_)
+
+    extract_cluster_relation_data(line_code_line_id_relation_data_map, line_map)
+
+    relation_sets: Dict[int, ValuesView[RelationData]] = find_relation_sets_for_all_last_four_lines(
+        line_map,
+        line_code_line_id_relation_data_map)
+
+    return LineClustering(line_data, distinct_labels, relation_sets)

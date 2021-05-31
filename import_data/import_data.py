@@ -7,7 +7,7 @@ from import_data.LineData import LineData
 
 from typing import Dict, List
 
-LastFourLinesMap = Dict[int, List[int]]
+IntegerToListOfIntegerMap = Dict[int, List[int]]
 
 
 def read_relation_data():
@@ -116,7 +116,7 @@ def generate_line_data(data):
     return result
 
 
-def filter_out_four_last_lines_of_data(input_line_data) -> LastFourLinesMap:
+def filter_out_four_last_lines_of_data(input_line_data) -> IntegerToListOfIntegerMap:
     """ Returns a map between line codes (identifying the kanji) and a list with IDs of the four last lines. """
     line_code_line_ids_map = {}
     for line in input_line_data:
@@ -129,6 +129,22 @@ def filter_out_four_last_lines_of_data(input_line_data) -> LastFourLinesMap:
     for key, value in line_code_line_ids_map.items():
         line_ids = sorted(value)
         result[key] = line_ids[len(line_ids) - 4:]
+
+    return result
+
+
+def setup_line_data_map(input_line_data) -> IntegerToListOfIntegerMap:
+    """ Returns a map between line codes (identifying the kanji) and a list with IDs of all the lines. """
+    line_code_line_ids_map = {}
+    for line in input_line_data:
+        if line['lineCode'] not in line_code_line_ids_map:
+            line_code_line_ids_map[line['lineCode']] = {line['id']}
+        else:
+            line_code_line_ids_map[line['lineCode']].add(line['id'])
+
+    result = {}
+    for key, value in line_code_line_ids_map.items():
+        result[key] = sorted(value)
 
     return result
 

@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from typing import Dict, Tuple, List, ValuesView
 
 from import_data.RelationData import RelationData
-from import_data.import_data import LastFourLinesMap
+from import_data.import_data import IntegerToListOfIntegerMap
 
 # The map has the line_code as key. The second key is (line code, input line, other line). The values are (row difference, column difference and angle)
 LineCodeMap = Dict[int, Dict[Tuple[int, int, int], Tuple[int, int, float]]]
@@ -80,7 +80,8 @@ def extract_cluster_relation_data(line_code_map, last_four_lines_id_map):
 
 def extract_rectangle_relation_data_for_line_code(line_code, line_code_map, last_four_lines_id_map):
     relation_data = line_code_map[line_code]
-    cluster_relation_matrix = np.full((4, 4), np.nan)
+    number_of_lines_included = len(last_four_lines_id_map)
+    cluster_relation_matrix = np.full((number_of_lines_included, number_of_lines_included), np.nan)
 
     line_id_index_map = {}
 
@@ -103,7 +104,7 @@ def extract_rectangle_relation_data_for_line_code(line_code, line_code_map, last
 
 
 def get_sets_of_relation_data_for_last_four_lines(line_code, line_code_map: LineCodeMap,
-                                                  last_four_lines_id_map: LastFourLinesMap):
+                                                  last_four_lines_id_map: IntegerToListOfIntegerMap):
     relation_data = line_code_map[line_code]
 
     # Four lines, put the cluster type of the relations
@@ -125,8 +126,9 @@ def get_sets_of_relation_data_for_last_four_lines(line_code, line_code_map: Line
     # return relation_sets
 
 
-def find_relation_sets_for_all_last_four_lines(last_four_lines: LastFourLinesMap,
-                                               line_code_line_id_relation_data_map: LineCodeMap) -> Dict[int, ValuesView[RelationData]]:
+def find_relation_sets_for_all_last_four_lines(last_four_lines: IntegerToListOfIntegerMap,
+                                               line_code_line_id_relation_data_map: LineCodeMap) -> Dict[
+    int, ValuesView[RelationData]]:
     line_code_relation_sets_map: Dict[int, ValuesView[RelationData]] = {}
     for key in last_four_lines:
         relation_sets_for_line_code = get_sets_of_relation_data_for_last_four_lines(key,
@@ -180,7 +182,7 @@ if __name__ == '__main__':
     # line_code_line_id_relation_data_map = import_data.transform_to_line_code_map(line_data)
 
     # The last four lines are the ones that make up a rectangle
-    last_four_lines: LastFourLinesMap = import_data.filter_out_four_last_lines_of_data(line_data)
+    last_four_lines: IntegerToListOfIntegerMap = import_data.filter_out_four_last_lines_of_data(line_data)
 
     array_data = import_data.transform_selected_lines_to_array(line_data, last_four_lines)
     line_code_line_id_relation_data_map: LineCodeMap = extract_line_code_map_from_array(array_data)
