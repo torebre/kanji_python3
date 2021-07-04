@@ -5,7 +5,7 @@ from drawSvg import Drawing
 
 from import_data import import_line_data
 from visualize.DrawLines import generate_line_coordinates
-from visualize.create_line import get_borders
+from line_utilities.create_line import get_borders
 
 
 def draw_line(start_x: int, start_y: int, stop_x: int, stop_y: int, canvas, stroke_colour='white', stroke_width=2):
@@ -37,7 +37,7 @@ def create_canvas(line_data: pd.DataFrame, colour_map={}):
     return drawing
 
 
-def create_canvas2(line_data: pd.DataFrame, colour_map={}):
+def draw_line_data_on_svg_canvas(line_data: pd.DataFrame, colour_map={}):
     line_coordinates = generate_line_coordinates(line_data)
     (x_min, y_min, x_max, y_max) = get_borders(line_coordinates)
 
@@ -98,7 +98,7 @@ if __name__ == '__main__':
     line_data_1 = line_data[is_line_1]
 
     colour_map = {1.0: ["#1248ff", "#fefefe", "red"]}
-    canvas = create_canvas2(line_data_1, colour_map)
+    canvas = draw_line_data_on_svg_canvas(line_data_1, colour_map)
     canvas.setPixelScale(5)
     canvas.savePng('test_output_svg.png')
 

@@ -98,8 +98,6 @@ def process_neighbours(start_node_label: str, graph: nx.DiGraph, cluster_graph: 
 
 
 def create_cluster_using_last_four_lines(line_data: List[Dict]) -> LineClustering:
-    line_data = line_data
-
     # The last four lines are the ones that make up a rectangle
     last_four_lines: IntegerToListOfIntegerMap = import_data.filter_out_four_last_lines_of_data(line_data)
 

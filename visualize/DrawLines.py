@@ -2,8 +2,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from visualize.create_line import create_line
-from visualize.create_line import get_line_matrix
+from line_utilities.create_line import create_line
+from line_utilities.create_line import get_line_matrix
 from import_data import import_line_data
 
 
