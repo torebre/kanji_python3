@@ -5,7 +5,6 @@ from line_data_generation.Line import Line
 import numpy.typing as npt
 
 
-
 def draw_lines(lines: npt.ArrayLike,
                x_offset: int = None,
                y_offset: int = None,
@@ -15,6 +14,11 @@ def draw_lines(lines: npt.ArrayLike,
                max_x: int = 10,
                max_y: int = 10):
 
-    for line in lines:
-        # min(min_x, )
 
+# for line in lines:
+# min(min_x, )
+
+
+if __name__ == '__main__':
+    # TODO
+    pass
