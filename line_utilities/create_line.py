@@ -1,7 +1,8 @@
 import numpy as np
+import numpy.typing as npt
 
 
-def create_line(start_x: int, start_y: int, stop_x: int, stop_y: int):
+def create_line(start_x: int, start_y: int, stop_x: int, stop_y: int) -> npt.ArrayLike:
     if start_x == stop_x:
         # Horizontal line
         rows = abs(stop_y - start_y) + 1

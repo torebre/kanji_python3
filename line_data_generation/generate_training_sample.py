@@ -11,6 +11,15 @@ from visualize.create_line_svg import draw_line_data_on_svg_canvas
 
 def generate_training_sample(number_of_rows: int = 64, number_of_columns: int = 64,
                              number_of_random_lines: int = 10) -> npt.ArrayLike:
+    """
+    Generates training samples which are a collection of line. Each sample contains one clear rectangle
+
+    :param number_of_rows:
+    :param number_of_columns:
+    :param number_of_random_lines:
+    :return: A multidimensional array where the number of rows is the number of lines, and the columns
+    are these: Angle, line length, start x coordinate, start y coordinate, stop x coordinate, stop y coordinate
+    """
     training_samples = np.zeros((number_of_random_lines + 4, 6))
 
     for i in range(0, number_of_random_lines):
@@ -76,7 +85,8 @@ if __name__ == '__main__':
         transformed_sample[i, 1] = i
         transformed_sample[i, 2:6] = training_samples[0][i, 0:4]
 
-    dataframe = pd.DataFrame(transformed_sample, columns=["unicode", "line_number", "angle", "length", "start_x", "start_y"])
+    dataframe = pd.DataFrame(transformed_sample,
+                             columns=["unicode", "line_number", "angle", "length", "start_x", "start_y"])
 
     canvas = draw_line_data_on_svg_canvas(dataframe)
     canvas.setPixelScale(5)
