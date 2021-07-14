@@ -2,15 +2,41 @@ from typing import List, Tuple
 
 import numpy as np
 import numpy.typing as npt
+import matplotlib.pyplot as plt
 
 from line_data_generation.generate_training_sample import generate_training_samples
 from line_utilities.create_line import create_line
 
 
-def extractClosestNeighboursForLine(line_number: int, lines_matrix: npt.ArrayLike):
-    generate_distance_matrix(line_number, lines_matrix)
+def extract_closest_neighbours_for_line(line_number: int, lines_matrix: npt.ArrayLike,
+                                        max_number_of_lines_to_return=5) -> \
+        List[int]:
+    distance_matrix = generate_distance_matrix(line_number, lines_matrix)
+    max_value = np.iinfo(np.int32).max
+    line_min_distance_tuple_list = []
 
-    # TODO
+    row_count = -1
+    for row in lines_matrix:
+        row_count += 1
+        if row_count == line_number:
+            continue
+
+        line = create_line(row[2].astype(np.int32),
+                           row[3].astype(np.int32),
+                           row[4].astype(np.int32),
+                           row[5].astype(np.int32))
+
+        min_distance_for_line = max_value
+        for coordinate in line:
+            distance_for_point = distance_matrix[coordinate[0]][coordinate[1]]
+            if min_distance_for_line > distance_for_point:
+                min_distance_for_line = distance_for_point
+
+        line_min_distance_tuple_list.append((row_count, min_distance_for_line))
+
+    line_min_distance_tuple_list = sorted(line_min_distance_tuple_list, key=lambda tup: tup[1])
+
+    return [tup[0] for tup in line_min_distance_tuple_list[0:max_number_of_lines_to_return]]
 
 
 def generate_distance_matrix(line_number: int, lines_matrix: npt.ArrayLike) -> npt.ArrayLike:
@@ -50,9 +76,6 @@ def generate_distance_matrix(line_number: int, lines_matrix: npt.ArrayLike) -> n
 
         coordinates_to_examine = coordinates_to_examine_next
         coordinates_to_examine_next = []
-
-        print("Coordinates to examine: ", len(coordinates_to_examine))
-
         distance_to_fill_in += 1
 
     return distance_matrix
@@ -97,29 +120,24 @@ def add_line_to_matrix(start_x: int, start_y: int, stop_x: int, stop_y: int, mat
 if __name__ == '__main__':
     training_samples = generate_training_samples()
     temp_matrix = generate_distance_matrix(0, training_samples[0])
+    closest_neighbours = extract_closest_neighbours_for_line(0, training_samples[0])
+
+    print("Closest neighbours: ", closest_neighbours)
 
     line_counter = 0
     for training_sample in training_samples[0]:
         if line_counter == 0:
-            line_counter = -10
+            fill_value = -100
+        elif line_counter in closest_neighbours:
+            fill_value = -50
         else:
-            line_counter = -3
+            fill_value = -3
 
         add_line_to_matrix(training_sample[2].astype(np.int32), training_sample[3].astype(np.int32),
                            training_sample[4].astype(np.int32), training_sample[5].astype(np.int32), temp_matrix,
-                           line_counter)
+                           fill_value)
 
         line_counter += 1
-
-    # temp_matrix = np.zeros((4, 4))
-    # temp_matrix.fill(-1)
-    # temp_matrix[2][0] = 0
-    # temp_coordinates = get_neighbours_with_no_distance_set(2, 0, temp_matrix)
-    # print("Temp coordinates: ", temp_coordinates)
-    # for coordinate in temp_coordinates:
-    #     temp_matrix[coordinate[0]][coordinate[1]] = 1
-
-    import matplotlib.pyplot as plt
 
     plt.imshow(temp_matrix)
     plt.show()
