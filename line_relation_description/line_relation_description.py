@@ -99,7 +99,7 @@ def find_closest_lines_in_data(angle_diff, midpoint_x_diff, midpoint_y_diff, _da
 
 
 if __name__ == "__main__":
-    training_samples = generate_training_samples()
+    training_samples = generate_training_samples(100, 5)
     test_sample = training_samples[0]
 
     # data has all the lines for all the samples except the sample that is going to be used for testing lookup

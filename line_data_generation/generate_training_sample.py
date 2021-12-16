@@ -10,17 +10,23 @@ from visualize.create_line_svg import draw_line_data_on_svg_canvas
 
 
 def generate_training_sample(number_of_rows: int = 64, number_of_columns: int = 64,
-                             number_of_random_lines: int = 10) -> npt.ArrayLike:
+                             number_of_random_lines: int = 10, include_rectangle: bool = True) -> npt.ArrayLike:
     """
-    Generates training samples which are a collection of line. Each sample contains one clear rectangle
+    Generates training samples which are a collection of lines.
+    If include_rectangle the last four lines represent a rectangle.
 
     :param number_of_rows:
     :param number_of_columns:
     :param number_of_random_lines:
+    :param include_rectangle:
     :return: A multidimensional array where the number of rows is the number of lines, and the columns
     are these: Angle, line length, start x coordinate, start y coordinate, stop x coordinate, stop y coordinate
     """
     training_samples = np.zeros((number_of_random_lines + 4, 6))
+
+    if not include_rectangle:
+        # Include four more random lines so that the returned number of lines is always the same
+        number_of_random_lines += 4
 
     for i in range(0, number_of_random_lines):
         # TODO Check if end is inclusive for range
@@ -44,8 +50,9 @@ def generate_training_sample(number_of_rows: int = 64, number_of_columns: int = 
         training_samples[i, 4] = stop_x
         training_samples[i, 5] = stop_y
 
-    training_samples[number_of_random_lines:(number_of_random_lines + 14), :] = add_rectangle(number_of_rows,
-                                                                                              number_of_columns)
+    if include_rectangle:
+        training_samples[number_of_random_lines:(number_of_random_lines + 4), :] = add_rectangle(number_of_rows,
+                                                                                                  number_of_columns)
 
     return training_samples
 
@@ -67,8 +74,12 @@ def add_rectangle(number_of_rows: int = 64, number_of_columns: int = 64) -> npt.
                       start_y]])
 
 
-def generate_training_samples() -> npt.ArrayLike:
-    samples = [generate_training_sample(64, 64) for _ in range(100)]
+def generate_training_samples(total_number_of_samples: int = 100,
+                              number_of_samples_to_not_include_rectangles: int = 0) -> npt.ArrayLike:
+    samples = []
+    for i in range(total_number_of_samples):
+        samples.append(generate_training_sample(64, 64, 10, i <= total_number_of_samples - number_of_samples_to_not_include_rectangles))
+
     return samples
 
 
