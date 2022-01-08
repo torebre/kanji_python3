@@ -84,7 +84,8 @@ def setup_example_rows(indices_lookup_examples: List[int], input_data) -> npt.ND
     return _data
 
 
-def find_closest_lines_in_data(angle_diff, midpoint_x_diff, midpoint_y_diff, _data) -> npt.NDArray:
+def find_closest_lines_in_data(angle_diff, midpoint_x_diff, midpoint_y_diff, _data,
+                               number_of_closest_lines_to_return: int = 10) -> npt.NDArray:
     # TODO Using midpoint diff will not work for finding rectangles
 
     # angle_diffs = np.concatenate(range(0, data.shape[0]), abs(angle_diff - data[:, 0]))
@@ -94,12 +95,12 @@ def find_closest_lines_in_data(angle_diff, midpoint_x_diff, midpoint_y_diff, _da
 
     # print(sorted_angle_diffs_indices)
 
-    # Return the indices of the 100 smallest angle differences
-    return sorted_angle_diffs_indices[0:100]
+    # Return the indices of the smallest angle differences
+    return sorted_angle_diffs_indices[0:number_of_closest_lines_to_return]
 
 
 if __name__ == "__main__":
-    training_samples = generate_training_samples(100, 5)
+    training_samples = generate_training_samples(100, 95)
     test_sample = training_samples[0]
 
     # data has all the lines for all the samples except the sample that is going to be used for testing lookup
@@ -114,6 +115,8 @@ if __name__ == "__main__":
 
     print(closest_neighbours)
 
+    similar_line_configurations = set()
+
     input_line = test_sample[0]
     for row_number in closest_neighbours:
         (angle_diff, midpoint_x_diff, midpoint_y_diff) = describe_two_lines(input_line, test_sample[row_number])
@@ -121,7 +124,12 @@ if __name__ == "__main__":
                                                                                      midpoint_y_diff, data)
         closest_neighbours_for_nearby_line = extract_closest_neighbours_for_line(row_number, test_sample)
 
-        sample_indices = set(data[indices_of_closest_lines_across_lookup_examples][:, 3])
+        sample_indices = {}
+        for index in indices_of_closest_lines_across_lookup_examples:
+            row = data[index]
+            sample_indices[(row[3], row[5])] = index
+
+        # sample_indices = {(row[3], row[5]) for row in data[indices_of_closest_lines_across_lookup_examples]}
 
         for nearby_line_index in closest_neighbours_for_nearby_line:
             closest_neighbours2 = extract_closest_neighbours_for_line(nearby_line_index, test_sample)
@@ -133,31 +141,24 @@ if __name__ == "__main__":
 
                 input_line2 = test_sample[row_number]
 
-                (angle_diff, midpoint_x_diff, midpoint_y_diff) = describe_two_lines(input_line2, test_sample[row_number2])
+                (angle_diff, midpoint_x_diff, midpoint_y_diff) = describe_two_lines(input_line2,
+                                                                                    test_sample[row_number2])
                 indices_of_closest_lines_across_lookup_examples2 = find_closest_lines_in_data(angle_diff,
                                                                                               midpoint_x_diff,
                                                                                               midpoint_y_diff,
                                                                                               data)
-                sample_indices2 = set(data[indices_of_closest_lines_across_lookup_examples2][:, 3])
 
-                intersection = sample_indices.intersection(sample_indices2)
+                sample_indices2 = {}
+                for index in indices_of_closest_lines_across_lookup_examples2:
+                    row = data[index]
+                    sample_indices2[(row[3], row[5])] = index
 
-                print(f"Intersection: {intersection}")
+                for key in sample_indices2:
+                    if key in sample_indices:
+                        similar_line_configurations.add((sample_indices[key], sample_indices2[key]))
 
+                # intersection = sample_indices.intersection(sample_indices2)
 
-    # count = 0
-    # for line in sample:
-    #     count2 = 0
-    #
-    #     for line2 in sample:
-    #         if count == count2:
-    #             count2 += 1
-    #             continue
-    #
-    #         (angle_diff, midpoint_x_diff, midpoint_y_diff) = describe_two_lines(line, line2)
+                # print(f"Intersection: {intersection}")
 
-    # Find closest points in example lookup set
-
-    # Choose new line pair
-
-    # Find closest points for new line pair
+    print("Similar line configurations: ", similar_line_configurations)
