@@ -1,3 +1,5 @@
+from typing import List
+
 import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
@@ -26,7 +28,7 @@ def generate_line_coordinates(line_data_frame: pd.DataFrame):
     return lines
 
 
-def generate_line_coordinates_from_matrix(line_data_matrix: npt.ArrayLike):
+def generate_line_coordinates_from_matrix(line_data_matrix: npt.ArrayLike) -> List[npt.ArrayLike]:
     lines = []
 
     for row in line_data_matrix:

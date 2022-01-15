@@ -1,3 +1,5 @@
+from typing import Dict
+
 import numpy as np
 import numpy.typing as npt
 
@@ -98,6 +100,7 @@ def create_line(start_x: int, start_y: int, stop_x: int, stop_y: int) -> npt.Arr
 
     return temp_result
 
+
 def get_borders(lines):
     x_min = 100000
     y_min = 100000
@@ -125,22 +128,26 @@ def get_borders(lines):
     return (x_min, y_min, x_max, y_max)
 
 
-def get_line_matrix(lines):
+def get_line_matrix(lines, line_value_map: Dict[int, int] = None):
     (x_min, y_min, x_max, y_max) = get_borders(lines)
     image_matrix = np.full((x_max - x_min + 1, y_max - y_min + 1), 0, dtype=np.int32)
 
     x_offset = -x_min
     y_offset = -y_min
 
-    line_value = 1
+    line_value = 0
+    counter = 0
     for line in lines:
+        if line_value_map is not None:
+            line_value = line_value_map[counter]
+        else:
+            line_value += 1
+        counter += 1
+
         for line_coordinate in line:
             image_matrix[line_coordinate[0] + x_offset, line_coordinate[1] + y_offset] = line_value
 
-        line_value += 1
-
     return image_matrix
-
 
 
 if __name__ == '__main__':

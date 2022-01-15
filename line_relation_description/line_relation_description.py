@@ -1,6 +1,6 @@
 import math
 import random
-from typing import Iterable, List
+from typing import Iterable, List, Dict, Tuple, Set
 
 import numpy as np
 import numpy.typing as npt
@@ -114,20 +114,19 @@ if __name__ == "__main__":
     # test_sample = np.sort(test_sample, axis=1)
 
     # Order the rows representing the lines by length
-    test_sample = test_sample[test_sample[:, 1].argsort()[::-1]]
+    # test_sample = test_sample[test_sample[:, 1].argsort()[::-1]]
 
-    closest_neighbours = extract_closest_neighbours_for_line(0, test_sample)
+    index_first_line = len(test_sample) - 1
+    closest_neighbours = extract_closest_neighbours_for_line(index_first_line, test_sample, 3)
+    input_line = test_sample[index_first_line]
 
-    print(closest_neighbours)
+    input_similar_map: Dict[Tuple[int, int], Set[Tuple[int, int]]] = {}
 
-    similar_line_configurations = set()
-
-    input_line = test_sample[0]
-    for row_number in closest_neighbours:
-        (angle_diff, midpoint_x_diff, midpoint_y_diff) = describe_two_lines(input_line, test_sample[row_number])
+    for second_line_in_path in closest_neighbours:
+        (angle_diff, midpoint_x_diff, midpoint_y_diff) = describe_two_lines(input_line, test_sample[second_line_in_path])
         indices_of_closest_lines_across_lookup_examples = find_closest_lines_in_data(angle_diff, midpoint_x_diff,
                                                                                      midpoint_y_diff, data)
-        closest_neighbours_for_nearby_line = extract_closest_neighbours_for_line(row_number, test_sample)
+        closest_neighbours_for_second_line = extract_closest_neighbours_for_line(second_line_in_path, test_sample, 3)
 
         sample_indices = {}
         for index in indices_of_closest_lines_across_lookup_examples:
@@ -136,15 +135,18 @@ if __name__ == "__main__":
 
         # sample_indices = {(row[3], row[5]) for row in data[indices_of_closest_lines_across_lookup_examples]}
 
-        for nearby_line_index in closest_neighbours_for_nearby_line:
-            closest_neighbours2 = extract_closest_neighbours_for_line(nearby_line_index, test_sample)
+        input_line2 = test_sample[second_line_in_path]
+        for third_line_in_path in closest_neighbours_for_second_line:
+            closest_neighbours_to_third_line = extract_closest_neighbours_for_line(third_line_in_path, test_sample, 3)
 
-            for row_number2 in closest_neighbours2:
-                if row_number2 == 0:
-                    # Line 0 is the original input line, do not go back and look at it
+
+
+
+            similar_line_configurations: Set[Tuple[int, int]] = set()
+            for row_number2 in closest_neighbours_to_third_line:
+                if row_number2 == index_first_line or row_number2 == second_line_in_path:
+                    # Do not go back and look at the first line
                     continue
-
-                input_line2 = test_sample[row_number]
 
                 (angle_diff, midpoint_x_diff, midpoint_y_diff) = describe_two_lines(input_line2,
                                                                                     test_sample[row_number2])
@@ -165,6 +167,9 @@ if __name__ == "__main__":
                         # to add one step to path started in the first step
                         similar_line_configurations.add((sample_indices[key], index))
 
+            if len(similar_line_configurations) != 0:
+                input_similar_map[(second_line_in_path, third_line_in_path)] = similar_line_configurations
+
                 # for key in sample_indices2:
                 #     if key in sample_indices:
                 #         similar_line_configurations.add((sample_indices[key], sample_indices2[key]))
@@ -173,19 +178,59 @@ if __name__ == "__main__":
 
                 # print(f"Intersection: {intersection}")
 
-    print("Similar line configurations: ", similar_line_configurations)
+    # print("Similar line configurations: ", similar_line_configurations)
 
-    for similar_configuration in similar_line_configurations:
-        sample_index = data[similar_configuration[0]][3]
 
-        print("Sample index: ", sample_index)
+    for key in input_similar_map:
+        similar_line_configurations = input_similar_map[key]
 
-        training_sample = training_samples[sample_index.astype(int)]
+        print(f"Input lines: {key}")
 
-        line_coordinates = generate_line_coordinates_from_matrix(training_sample)
-        line_matrix = get_line_matrix(line_coordinates)
+        # Show the input
+        line_coordinates = generate_line_coordinates_from_matrix(test_sample)
+        line_values = []
+        counter2 = 0
+
+        for counter in range(len(line_coordinates)):
+            if counter == 0 or counter in key:
+                line_values.append(100 + counter2)
+                counter2 += 100
+            else:
+                line_values.append(10)
+
+        line_matrix = get_line_matrix(line_coordinates, line_values)
 
         # fig = plt.figure()
 
         plt.matshow(line_matrix)
+        plt.title(f"Input: 0, {key[0]}, {key[1]}")
         plt.show()
+
+        for similar_configuration in similar_line_configurations:
+            sample_index = data[similar_configuration[0]][3]
+
+            print("Sample index: ", sample_index)
+
+            lookup_sample = training_samples[sample_index.astype(int)]
+
+            indices_in_sample = [data[similar_configuration[0]][4],
+                                 data[similar_configuration[0]][5],
+                                 data[similar_configuration[1]][5]]
+
+            line_coordinates = generate_line_coordinates_from_matrix(lookup_sample)
+            line_values = []
+
+            counter2 = 0
+            for counter in range(len(line_coordinates)):
+                if counter in indices_in_sample:
+                    line_values.append(100 + counter2)
+                    counter2 += 100
+                else:
+                    line_values.append(10)
+
+            line_matrix = get_line_matrix(line_coordinates, line_values)
+
+            # fig = plt.figure()
+
+            plt.matshow(line_matrix)
+            plt.show()
