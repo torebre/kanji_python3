@@ -1,11 +1,15 @@
 import math
+import random
 from typing import Iterable, List
 
 import numpy as np
 import numpy.typing as npt
+from matplotlib import pyplot as plt
 
 from line_data_generation.generate_training_sample import generate_training_samples
 from line_data_generation.line_relation_data_setup import extract_closest_neighbours_for_line
+from line_utilities.create_line import get_line_matrix
+from visualize.DrawLines import generate_line_coordinates_from_matrix
 
 
 def describe_two_lines(line1: npt.ArrayLike, line2: npt.ArrayLike):
@@ -100,6 +104,7 @@ def find_closest_lines_in_data(angle_diff, midpoint_x_diff, midpoint_y_diff, _da
 
 
 if __name__ == "__main__":
+    random.seed(1)
     training_samples = generate_training_samples(100, 95)
     test_sample = training_samples[0]
 
@@ -151,14 +156,36 @@ if __name__ == "__main__":
                 sample_indices2 = {}
                 for index in indices_of_closest_lines_across_lookup_examples2:
                     row = data[index]
+                    key = (row[3], row[4])
                     sample_indices2[(row[3], row[5])] = index
 
-                for key in sample_indices2:
                     if key in sample_indices:
-                        similar_line_configurations.add((sample_indices[key], sample_indices2[key]))
+                        # If there is a pair of lines in the first step where the second line is
+                        # the same as the first line in the second step, then add it here
+                        # to add one step to path started in the first step
+                        similar_line_configurations.add((sample_indices[key], index))
+
+                # for key in sample_indices2:
+                #     if key in sample_indices:
+                #         similar_line_configurations.add((sample_indices[key], sample_indices2[key]))
 
                 # intersection = sample_indices.intersection(sample_indices2)
 
                 # print(f"Intersection: {intersection}")
 
     print("Similar line configurations: ", similar_line_configurations)
+
+    for similar_configuration in similar_line_configurations:
+        sample_index = data[similar_configuration[0]][3]
+
+        print("Sample index: ", sample_index)
+
+        training_sample = training_samples[sample_index.astype(int)]
+
+        line_coordinates = generate_line_coordinates_from_matrix(training_sample)
+        line_matrix = get_line_matrix(line_coordinates)
+
+        # fig = plt.figure()
+
+        plt.matshow(line_matrix)
+        plt.show()
