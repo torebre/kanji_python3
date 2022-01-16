@@ -17,16 +17,49 @@ def describe_two_lines(line1: npt.ArrayLike, line2: npt.ArrayLike):
         Angle, line length, start x coordinate, start y coordinate, stop x coordinate, stop y coordinate
     :return:
     """
-    line_angle1 = compute_line_angle(line1[1], line1[2], line1[3], line1[4])
-    line_angle2 = compute_line_angle(line2[1], line2[2], line2[3], line2[4])
+    # line_angle1 = compute_line_angle(line1[1], line1[2], line1[3], line1[4])
+    # line_angle2 = compute_line_angle(line2[1], line2[2], line2[3], line2[4])
+    # angle_diff = abs(line_angle1 - line_angle2)
 
-    angle_diff = abs(line_angle1 - line_angle2)
+    angle_diff = abs(line1[0] - line2[0])
+    if angle_diff > 2 * math.pi:
+        angle_diff -= 2 * math.pi
+    elif angle_diff < 0:
+        angle_diff += 2 * math.pi
+
 
     midpoint_x_line1 = line1[1] if line1[1] < line1[3] else line1[3] + abs(line1[1] - line1[3]) / 2
     midpoint_x_line2 = line2[1] if line2[1] < line2[3] else line2[3] + abs(line2[1] - line2[3]) / 2
 
     midpoint_y_line1 = line1[2] if line1[2] < line1[4] else line1[4] + abs(line1[2] - line1[4]) / 2
     midpoint_y_line2 = line2[3] if line2[2] < line2[4] else line2[4] + abs(line2[2] - line2[4]) / 2
+
+    return (angle_diff, abs(midpoint_x_line1 - midpoint_x_line2), abs(midpoint_y_line1 - midpoint_y_line2))
+
+
+def describe_two_lines_updated(angle_line1: float, angle_line2: float, line1_x_start: int, line1_y_start: int,
+                       line1_x_stop: int, line1_y_stop: int, line2_x_start: int, line2_y_start: int,
+                       line2_x_stop: int, line2_y_stop: int):
+    """
+    The two lines are assumed to come from the same sample
+
+    :return:
+    """
+    angle_diff = abs(angle_line1 - angle_line2)
+    if angle_diff > 2 * math.pi:
+        angle_diff -= 2 * math.pi
+    elif angle_diff < 0:
+        angle_diff += 2 * math.pi
+
+    midpoint_x_line1 = (line1_x_start if line1_x_start < line1_x_stop else line1_x_stop) + abs(
+        line1_x_start - line1_x_stop) / 2
+    midpoint_x_line2 = (line2_x_start if line2_x_start < line2_x_stop else line2_x_stop) + abs(
+        line2_x_start - line2_x_stop) / 2
+
+    midpoint_y_line1 = (line1_y_start if line1_y_start < line1_y_stop else line1_y_stop) + abs(
+        line1_y_start - line1_y_stop) / 2
+    midpoint_y_line2 = (line2_y_start if line2_y_start < line2_y_stop else line2_y_stop) + abs(
+        line2_y_start - line2_y_stop) / 2
 
     return (angle_diff, abs(midpoint_x_line1 - midpoint_x_line2), abs(midpoint_y_line1 - midpoint_y_line2))
 
@@ -48,7 +81,8 @@ def compute_line_angle(start_x: int, start_y: int, stop_x: int, stop_y: int):
 
 def setup_example_rows(indices_lookup_examples: List[int], input_data) -> npt.NDArray:
     """
-        Returns an array where the columns are angle difference, midpoint x difference, midpoint y difference, sample index, line 1 index within sample and line 2 index within sample
+        Returns an array where the columns are angle difference, midpoint x difference, midpoint y difference,
+        sample index, line 1 index within sample and line 2 index within sample
     """
     lookup_examples = [input_data[index] for index in indices_lookup_examples]
     number_of_lookup_examples = len(lookup_examples)
@@ -105,11 +139,17 @@ def find_closest_lines_in_data(angle_diff, midpoint_x_diff, midpoint_y_diff, _da
 
 if __name__ == "__main__":
     random.seed(1)
-    training_samples = generate_training_samples(100, 95)
-    test_sample = training_samples[0]
+    # Try to include just one random line in the cases where there is a rectangle in the sample
+    all_training_samples = generate_training_samples(100, 95, 1)
+    test_sample = all_training_samples[0]
 
     # data has all the lines for all the samples except the sample that is going to be used for testing lookup
-    data = setup_example_rows(range(1, len(training_samples)), training_samples)
+    # data = setup_example_rows(range(1, len(training_samples)), training_samples)
+
+    # Only include one sample to look for rectangles for debugging purposes
+    samples_to_include_in_lookup = [1]
+    data = setup_example_rows(samples_to_include_in_lookup, all_training_samples)
+    samples_in_lookup = [all_training_samples[1]]
 
     # test_sample = np.sort(test_sample, axis=1)
 
@@ -118,19 +158,22 @@ if __name__ == "__main__":
 
     index_first_line = len(test_sample) - 1
     number_of_closest_neighbours_to_return = 5
-    closest_neighbours = extract_closest_neighbours_for_line(index_first_line, test_sample, number_of_closest_neighbours_to_return)
+    closest_neighbours = extract_closest_neighbours_for_line(index_first_line, test_sample,
+                                                             number_of_closest_neighbours_to_return)
     input_line = test_sample[index_first_line]
 
     input_similar_map: Dict[Tuple[int, int], Set[Tuple[int, int]]] = {}
 
     for second_line_in_path in closest_neighbours:
-        (angle_diff, midpoint_x_diff, midpoint_y_diff) = describe_two_lines(input_line, test_sample[second_line_in_path])
-        indices_of_closest_lines_across_lookup_examples = find_closest_lines_in_data(angle_diff, midpoint_x_diff,
-                                                                                     midpoint_y_diff, data)
-        closest_neighbours_for_second_line = extract_closest_neighbours_for_line(second_line_in_path, test_sample, number_of_closest_neighbours_to_return)
+        (angle_diff, midpoint_x_diff, midpoint_y_diff) = describe_two_lines(input_line,
+                                                                            test_sample[second_line_in_path])
+        row_indices_of_closest_lines_across_lookup_examples = find_closest_lines_in_data(angle_diff, midpoint_x_diff,
+                                                                                         midpoint_y_diff, data)
+        closest_neighbours_for_second_line = extract_closest_neighbours_for_line(second_line_in_path, test_sample,
+                                                                                 number_of_closest_neighbours_to_return)
 
         sample_indices = {}
-        for index in indices_of_closest_lines_across_lookup_examples:
+        for index in row_indices_of_closest_lines_across_lookup_examples:
             row = data[index]
             sample_indices[(row[3], row[5])] = index
 
@@ -151,11 +194,11 @@ if __name__ == "__main__":
                                                                                           midpoint_y_diff,
                                                                                           data)
 
-            sample_indices2 = {}
+            # sample_indices2 = {}
             for index in indices_of_closest_lines_across_lookup_examples2:
                 row = data[index]
                 key = (row[3], row[4])
-                sample_indices2[(row[3], row[5])] = index
+                # sample_indices2[(row[3], row[5])] = index
 
                 if key in sample_indices:
                     # If there is a pair of lines in the first step where the second line is
@@ -175,7 +218,6 @@ if __name__ == "__main__":
                 # print(f"Intersection: {intersection}")
 
     # print("Similar line configurations: ", similar_line_configurations)
-
 
     for key in input_similar_map:
         similar_line_configurations = input_similar_map[key]
@@ -201,37 +243,37 @@ if __name__ == "__main__":
         plt.matshow(line_matrix)
         plt.title(f"Input: {index_first_line}, {key[0]}, {key[1]}")
 
-        plt.text(line_coordinates[0][0][0], line_coordinates[0][0][1], "Test")
-        plt.text(0, 0, "Test")
+        # plt.text(line_coordinates[0][0][0], line_coordinates[0][0][1], "Test")
+        # plt.text(0, 0, "Test")
 
         plt.show()
 
-        # for similar_configuration in similar_line_configurations:
-        #     sample_index = data[similar_configuration[0]][3]
-        #
-        #     print("Sample index: ", sample_index)
-        #
-        #     lookup_sample = training_samples[sample_index.astype(int)]
-        #
-        #     indices_in_sample = [data[similar_configuration[0]][4],
-        #                          data[similar_configuration[0]][5],
-        #                          data[similar_configuration[1]][5]]
-        #
-        #     line_coordinates = generate_line_coordinates_from_matrix(lookup_sample)
-        #     line_values = []
-        #
-        #     counter2 = 0
-        #     for counter in range(len(line_coordinates)):
-        #         if counter in indices_in_sample:
-        #             line_values.append(100 + counter2)
-        #             counter2 += 100
-        #         else:
-        #             line_values.append(10)
-        #
-        #     line_matrix = get_line_matrix(line_coordinates, line_values)
-        #
-        #     # fig = plt.figure()
-        #
-        #     plt.matshow(line_matrix)
-        #     plt.title(f"Sample: {sample_index}. Lines: ")
-        #     plt.show()
+        for similar_configuration in similar_line_configurations:
+            sample_index = data[similar_configuration[0]][3]
+
+            print("Sample index: ", sample_index)
+
+            lookup_sample = samples_in_lookup[sample_index.astype(int)]
+
+            indices_in_sample = [data[similar_configuration[0]][4],
+                                 data[similar_configuration[0]][5],
+                                 data[similar_configuration[1]][5]]
+
+            line_coordinates = generate_line_coordinates_from_matrix(lookup_sample)
+            line_values = []
+
+            counter2 = 0
+            for counter in range(len(line_coordinates)):
+                if counter in indices_in_sample:
+                    line_values.append(100 + counter2)
+                    counter2 += 100
+                else:
+                    line_values.append(10)
+
+            line_matrix = get_line_matrix(line_coordinates, line_values)
+
+            # fig = plt.figure()
+
+            plt.matshow(line_matrix)
+            plt.title(f"Sample: {sample_index}. Lines: ")
+            plt.show()

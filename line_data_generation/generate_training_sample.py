@@ -75,10 +75,19 @@ def add_rectangle(number_of_rows: int = 64, number_of_columns: int = 64) -> npt.
 
 
 def generate_training_samples(total_number_of_samples: int = 100,
-                              number_of_samples_to_not_include_rectangles: int = 0) -> npt.ArrayLike:
+                              number_of_samples_to_not_include_rectangles: int = 0,
+                              number_of_random_lines: int = 10) -> npt.ArrayLike:
+    """
+    Any samples with rectangles are included first
+
+    :param total_number_of_samples:
+    :param number_of_samples_to_not_include_rectangles:
+    :param number_of_random_lines:
+    :return:
+    """
     samples = []
-    for i in range(total_number_of_samples):
-        samples.append(generate_training_sample(64, 64, 10, i <= total_number_of_samples - number_of_samples_to_not_include_rectangles))
+    for sample_counter in range(total_number_of_samples):
+        samples.append(generate_training_sample(64, 64, number_of_random_lines, sample_counter <= total_number_of_samples - number_of_samples_to_not_include_rectangles))
 
     return samples
 
