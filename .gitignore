@@ -1,5 +1,5 @@
 .idea
-venv
+venv*
 **/__pycache__
 **/*.jpg
 **/.ipynb_checkpoints
