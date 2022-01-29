@@ -5,7 +5,10 @@ import numpy as np
 import numpy.typing as npt
 
 import pandas as pd
+from matplotlib import pyplot as plt
 
+from line_utilities.create_line import get_line_matrix
+from visualize.DrawLines import generate_line_coordinates_from_matrix
 from visualize.create_line_svg import draw_line_data_on_svg_canvas
 
 
@@ -52,12 +55,12 @@ def generate_training_sample(number_of_rows: int = 64, number_of_columns: int = 
 
     if include_rectangle:
         training_samples[number_of_random_lines:(number_of_random_lines + 4), :] = add_rectangle(number_of_rows,
-                                                                                                  number_of_columns)
+                                                                                                 number_of_columns)
 
     return training_samples
 
 
-def add_rectangle(number_of_rows: int = 64, number_of_columns: int = 64) -> npt.ArrayLike:
+def add_rectangle2(number_of_rows: int = 64, number_of_columns: int = 64) -> npt.ArrayLike:
     start_x = random.sample(range(0, number_of_rows - 1), 1)[0]
     available_space = number_of_columns - start_x
     line_length = random.sample(range(1, available_space), 1)[0]
@@ -74,6 +77,51 @@ def add_rectangle(number_of_rows: int = 64, number_of_columns: int = 64) -> npt.
                       start_y]])
 
 
+def add_rectangle(number_of_rows: int = 64, number_of_columns: int = 64) -> npt.ArrayLike:
+    radius = math.floor(random.sample(range(1, min([number_of_rows, number_of_columns])), 1)[0] / 2)
+
+    x_centre = random.sample(range(radius, number_of_rows - radius), 1)[0]
+    y_centre = random.sample(range(radius, number_of_columns - radius), 1)[0]
+
+    rotation = random.random() * math.pi / 2
+    point_rotation = random.random() * math.pi / 2
+
+    first_point_rotation = rotation + point_rotation
+    second_point_rotation = math.pi - point_rotation + rotation
+
+    third_point_rotation = rotation - point_rotation
+    fourth_point_rotation = rotation + math.pi + (math.pi - second_point_rotation + rotation)
+
+    x1 = math.sin(first_point_rotation) * radius + x_centre
+    y1 = math.cos(first_point_rotation) * radius + y_centre
+
+    x2 = math.sin(second_point_rotation) * radius + x_centre
+    y2 = math.cos(second_point_rotation) * radius + y_centre
+
+    x3 = math.sin(third_point_rotation) * radius + x_centre
+    y3 = math.cos(third_point_rotation) * radius + y_centre
+
+    x4 = math.sin(fourth_point_rotation) * radius + x_centre
+    y4 = math.cos(fourth_point_rotation) * radius + y_centre
+
+    length_12 = math.sqrt(math.pow(abs(x2 - x1), 2) + math.pow(abs(y2 - y1), 2))
+    angle_12 = math.atan2(y1 - y2, x1 - x2)
+
+    length_24 = math.sqrt(math.pow(abs(x2 - x4), 2) + math.pow(abs(y2 - y4), 2))
+    angle_24 = math.atan2(y1 - y4, x1 - x4)
+
+    length_13 = math.sqrt(math.pow(abs(x3 - x1), 2) + math.pow(abs(y3 - y1), 2))
+    angle_13 = math.atan2(y3 - y2, x3 - x2)
+
+    length_34 = math.sqrt(math.pow(abs(x3 - x4), 2) + math.pow(abs(y3 - y4), 2))
+    angle_34 = math.atan2(y3 - y4, x3 - x4)
+
+    return np.array([[angle_12, length_12, x1, y1, x2, y2],
+                    [angle_24, length_24, x2, y4, x3, y3],
+                    [angle_13, length_13, x1, y1, x3, y4],
+                    [angle_34, length_34, x3, y3, x4, y4]])
+
+
 def generate_training_samples(total_number_of_samples: int = 100,
                               number_of_samples_to_not_include_rectangles: int = 0,
                               number_of_random_lines: int = 10) -> npt.ArrayLike:
@@ -87,27 +135,52 @@ def generate_training_samples(total_number_of_samples: int = 100,
     """
     samples = []
     for sample_counter in range(total_number_of_samples):
-        samples.append(generate_training_sample(64, 64, number_of_random_lines, sample_counter <= total_number_of_samples - number_of_samples_to_not_include_rectangles))
+        samples.append(generate_training_sample(64, 64, number_of_random_lines,
+                                                sample_counter <= total_number_of_samples - number_of_samples_to_not_include_rectangles))
 
     return samples
 
 
 if __name__ == '__main__':
-    training_samples = generate_training_samples()
+    # training_samples = generate_training_samples()
+    #
+    # rows_in_sample = len(training_samples[0])
+    #
+    # print("Rows in sample: ", rows_in_sample)
+    #
+    # transformed_sample = np.zeros((rows_in_sample, 6))
+    # for i in range(rows_in_sample):
+    #     transformed_sample[i, 0] = 1
+    #     transformed_sample[i, 1] = i
+    #     transformed_sample[i, 2:6] = training_samples[0][i, 0:4]
+    #
+    # dataframe = pd.DataFrame(transformed_sample,
+    #                          columns=["unicode", "line_number", "angle", "length", "start_x", "start_y"])
+    #
+    # canvas = draw_line_data_on_svg_canvas(dataframe)
+    # canvas.setPixelScale(5)
+    # canvas.savePng('test_output_svg2.png')
 
-    rows_in_sample = len(training_samples[0])
+    # add_rectangle(64, 64)
 
-    print("Rows in sample: ", rows_in_sample)
+    # random.seed(1)
+    all_training_samples = generate_training_samples(1, 0, 0)
+    test_sample = all_training_samples[0]
 
-    transformed_sample = np.zeros((rows_in_sample, 6))
-    for i in range(rows_in_sample):
-        transformed_sample[i, 0] = 1
-        transformed_sample[i, 1] = i
-        transformed_sample[i, 2:6] = training_samples[0][i, 0:4]
+    line_coordinates = generate_line_coordinates_from_matrix(test_sample)
+    line_values = []
+    counter2 = 0
 
-    dataframe = pd.DataFrame(transformed_sample,
-                             columns=["unicode", "line_number", "angle", "length", "start_x", "start_y"])
+    # for counter in range(len(line_coordinates)):
+    #     if counter == index_first_line or counter in key:
+    #         line_values.append(100 + counter2)
+    #         counter2 += 100
+    #     else:
+    #         line_values.append(10)
 
-    canvas = draw_line_data_on_svg_canvas(dataframe)
-    canvas.setPixelScale(5)
-    canvas.savePng('test_output_svg2.png')
+    line_matrix = get_line_matrix(line_coordinates)
+
+    # fig = plt.figure()
+
+    plt.matshow(line_matrix)
+    plt.show()
