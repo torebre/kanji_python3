@@ -8,7 +8,8 @@ import pandas as pd
 from matplotlib import pyplot as plt
 
 from line_utilities.create_line import get_line_matrix
-from visualize.DrawLines import generate_line_coordinates_from_matrix
+from visualize.DrawLines import generate_line_coordinates_from_matrix, \
+    generate_line_coordinates_from_matrix_using_start_and_stop
 from visualize.create_line_svg import draw_line_data_on_svg_canvas
 
 
@@ -60,7 +61,7 @@ def generate_training_sample(number_of_rows: int = 64, number_of_columns: int = 
     return training_samples
 
 
-def add_rectangle2(number_of_rows: int = 64, number_of_columns: int = 64) -> npt.ArrayLike:
+def add_rectangle_old(number_of_rows: int = 64, number_of_columns: int = 64) -> npt.ArrayLike:
     start_x = random.sample(range(0, number_of_rows - 1), 1)[0]
     available_space = number_of_columns - start_x
     line_length = random.sample(range(1, available_space), 1)[0]
@@ -84,7 +85,7 @@ def add_rectangle(number_of_rows: int = 64, number_of_columns: int = 64) -> npt.
     y_centre = random.sample(range(radius, number_of_columns - radius), 1)[0]
 
     rotation = random.random() * math.pi / 2
-    point_rotation = random.random() * math.pi / 2
+    point_rotation = (math.pi / 2 - rotation) * random.random()
 
     first_point_rotation = rotation + point_rotation
     second_point_rotation = math.pi - point_rotation + rotation
@@ -92,34 +93,34 @@ def add_rectangle(number_of_rows: int = 64, number_of_columns: int = 64) -> npt.
     third_point_rotation = rotation - point_rotation
     fourth_point_rotation = rotation + math.pi + (math.pi - second_point_rotation + rotation)
 
-    x1 = math.sin(first_point_rotation) * radius + x_centre
-    y1 = math.cos(first_point_rotation) * radius + y_centre
+    x1 = math.cos(first_point_rotation) * radius + x_centre
+    y1 = math.sin(first_point_rotation) * radius + y_centre
 
-    x2 = math.sin(second_point_rotation) * radius + x_centre
-    y2 = math.cos(second_point_rotation) * radius + y_centre
+    x2 = math.cos(second_point_rotation) * radius + x_centre
+    y2 = math.sin(second_point_rotation) * radius + y_centre
 
-    x3 = math.sin(third_point_rotation) * radius + x_centre
-    y3 = math.cos(third_point_rotation) * radius + y_centre
+    x3 = math.cos(third_point_rotation) * radius + x_centre
+    y3 = math.sin(third_point_rotation) * radius + y_centre
 
-    x4 = math.sin(fourth_point_rotation) * radius + x_centre
-    y4 = math.cos(fourth_point_rotation) * radius + y_centre
+    x4 = math.cos(fourth_point_rotation) * radius + x_centre
+    y4 = math.sin(fourth_point_rotation) * radius + y_centre
 
     length_12 = math.sqrt(math.pow(abs(x2 - x1), 2) + math.pow(abs(y2 - y1), 2))
-    angle_12 = math.atan2(y1 - y2, x1 - x2)
+    angle_12 = rotation + math.pi
 
     length_24 = math.sqrt(math.pow(abs(x2 - x4), 2) + math.pow(abs(y2 - y4), 2))
-    angle_24 = math.atan2(y1 - y4, x1 - x4)
+    angle_24 = rotation - math.pi / 2
 
     length_13 = math.sqrt(math.pow(abs(x3 - x1), 2) + math.pow(abs(y3 - y1), 2))
-    angle_13 = math.atan2(y3 - y2, x3 - x2)
+    angle_13 = rotation - math.pi / 2
 
     length_34 = math.sqrt(math.pow(abs(x3 - x4), 2) + math.pow(abs(y3 - y4), 2))
-    angle_34 = math.atan2(y3 - y4, x3 - x4)
+    angle_34 = math.pi + rotation
 
     return np.array([[angle_12, length_12, x1, y1, x2, y2],
-                    [angle_24, length_24, x2, y4, x3, y3],
-                    [angle_13, length_13, x1, y1, x3, y4],
-                    [angle_34, length_34, x3, y3, x4, y4]])
+                     [angle_24, length_24, x2, y2, x4, y4],
+                     [angle_13, length_13, x1, y1, x3, y3],
+                     [angle_34, length_34, x3, y3, x4, y4]])
 
 
 def generate_training_samples(total_number_of_samples: int = 100,
@@ -167,6 +168,7 @@ if __name__ == '__main__':
     all_training_samples = generate_training_samples(1, 0, 0)
     test_sample = all_training_samples[0]
 
+    # line_coordinates = generate_line_coordinates_from_matrix_using_start_and_stop(test_sample)
     line_coordinates = generate_line_coordinates_from_matrix(test_sample)
     line_values = []
     counter2 = 0
