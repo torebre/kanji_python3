@@ -137,6 +137,15 @@ def find_closest_lines_in_data(angle_diff, midpoint_x_diff, midpoint_y_diff, _da
 
 
 def find_similar_paths(test_sample: npt.ArrayLike, data: npt.NDArray) -> Dict[Tuple[int, int], Set[Tuple[int, int]]]:
+    '''
+
+    :param test_sample:
+    :param data:
+    :return: The key is the IDs of the first and second steps in the input sample. One step consists of two lines.
+    The value is a tuple consisting of the index of the first step among the lookup samples, index of the second step
+    among the lookup samples, distance between first step of the input and lookup sample, distance between the second
+    step from the input sample and the second step among the lookup samples
+    '''
     # test_sample = np.sort(test_sample, axis=1)
     # Order the rows representing the lines by length
     # test_sample = test_sample[test_sample[:, 1].argsort()[::-1]]
@@ -145,7 +154,7 @@ def find_similar_paths(test_sample: npt.ArrayLike, data: npt.NDArray) -> Dict[Tu
     closest_neighbours = extract_closest_neighbours_for_line(index_first_line, test_sample,
                                                              number_of_closest_neighbours_to_return)
     input_line = test_sample[index_first_line]
-    input_similar_map: Dict[Tuple[int, int], Set[Tuple[int, int]]] = {}
+    input_similar_map: Dict[Tuple[int, int], Set[Tuple[int, int, int, int]]] = {}
     for second_line_in_path in closest_neighbours:
         (angle_diff, midpoint_x_diff, midpoint_y_diff) = describe_two_lines(input_line,
                                                                             test_sample[second_line_in_path])
@@ -241,7 +250,9 @@ def show_results(data, index_first_line, input_similar_map, samples_in_lookup,
 
         plt.show()
 
-        for similar_configuration in similar_line_configurations:
+        similar_line_configurations_sorted_by_distance = sorted(similar_line_configurations,
+                                                                key=lambda value: value[2] + value[3])
+        for similar_configuration in similar_line_configurations_sorted_by_distance:
             sample_index = data[similar_configuration[0]][3]
 
             print("Sample index: ", sample_index)
@@ -287,6 +298,7 @@ def main():
     samples_in_lookup = [all_training_samples[1]]
 
     input_similar_map = find_similar_paths(test_sample, data)
+    # input_similar_map_sorted = {key: value for key, value in sorted(input_similar_map.items(), key = lambda item: item[2] + item[3])}
 
     show_results(data, index_first_line, input_similar_map, samples_in_lookup, test_sample)
 
