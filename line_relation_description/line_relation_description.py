@@ -222,7 +222,7 @@ def find_similar_paths(test_sample: npt.ArrayLike, data: npt.NDArray) -> Dict[Tu
 
 
 def show_results(data, index_first_line, input_similar_map, samples_in_lookup,
-                 test_sample):
+                 test_sample, number_of_closest_samples_to_show: int = 30):
     for key in input_similar_map:
         similar_line_configurations = input_similar_map[key]
 
@@ -252,6 +252,7 @@ def show_results(data, index_first_line, input_similar_map, samples_in_lookup,
 
         similar_line_configurations_sorted_by_distance = sorted(similar_line_configurations,
                                                                 key=lambda value: value[2] + value[3])
+        configuration_counter = 0
         for similar_configuration in similar_line_configurations_sorted_by_distance:
             sample_index = data[similar_configuration[0]][3]
 
@@ -281,8 +282,13 @@ def show_results(data, index_first_line, input_similar_map, samples_in_lookup,
                 f"Sample: {sample_index}. Line pairs: {similar_configuration[0]}, {similar_configuration[1]}.\nDistances: {similar_configuration[2]}, {similar_configuration[3]}")
             plt.show()
 
+            configuration_counter += 1
 
-def main():
+            if configuration_counter >= number_of_closest_samples_to_show:
+                break
+
+
+def search_for_rectangle_experiment_with_one_random_line():
     random.seed(1)
     # Try to include just one random line in the cases where there is a rectangle in the sample
     all_training_samples = generate_training_samples(100, 95, 1)
@@ -303,5 +309,26 @@ def main():
     show_results(data, index_first_line, input_similar_map, samples_in_lookup, test_sample)
 
 
+def search_for_rectangle_experiment_with_multiple_random_lines():
+    random.seed(1)
+
+    all_training_samples = generate_training_samples(100, 50, 10)
+    test_sample = all_training_samples[0]
+    index_first_line = len(test_sample) - 1
+
+    # data has all the lines for all the samples except the sample that is going to be used for testing lookup
+    # data = setup_example_rows(range(1, len(training_samples)), training_samples)
+
+    samples_to_include_in_lookup = [i for i in range(1, len(all_training_samples))]
+    data: npt.NDArray = setup_example_rows(samples_to_include_in_lookup, all_training_samples)
+    samples_in_lookup = [all_training_samples[i] for i in samples_to_include_in_lookup]
+
+    input_similar_map = find_similar_paths(test_sample, data)
+    # input_similar_map_sorted = {key: value for key, value in sorted(input_similar_map.items(), key = lambda item: item[2] + item[3])}
+
+    show_results(data, index_first_line, input_similar_map, samples_in_lookup, test_sample)
+
+
 if __name__ == "__main__":
-    main()
+    # search_for_rectangle_experiment_with_one_random_line()
+    search_for_rectangle_experiment_with_multiple_random_lines()
