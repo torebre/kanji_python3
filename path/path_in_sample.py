@@ -15,3 +15,10 @@ class Path:
 
     def get_element_ids(self) -> List[int]:
         return [sample.id_to_within_sample for sample in self.path]
+
+    def get_distance(self) -> float:
+        total_distance = 0
+        for step in self.path:
+            total_distance += step.distance
+
+        return 1 / (total_distance + 0.001) + len(self.path)

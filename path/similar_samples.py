@@ -17,8 +17,9 @@ class SimilarSamples:
         self.input_sample = input_sample
         self.ids_of_input_elements = ids_of_input_elements
 
-    def find_paths_where_last_step_is_matching(self, sample_id: int, id_last_path_element: int) -> List[
-        path_in_sample.Path]:
+    def find_paths_where_last_step_is_matching(self, sample_id: int, id_last_path_element: int, id_of_new_step: int) -> \
+            List[
+                path_in_sample.Path]:
         matching_paths = []
 
         for path in self.similar_paths_in_other_samples:
@@ -26,6 +27,14 @@ class SimilarSamples:
                 continue
 
             step_already_in_path = False
+            for path_step in path.path:
+                if path_step.id_to_within_sample == id_of_new_step:
+                    step_already_in_path = True
+                    break
+
+            if step_already_in_path:
+                continue
+
             for path_step in path.path[:-1]:
                 if path_step.id_to_within_sample == id_last_path_element:
                     step_already_in_path = True
@@ -47,16 +56,13 @@ class SimilarSamples:
 
         self.similar_paths_in_other_samples.append(new_path)
 
-    def sort_paths_sorted_by_distance_criteria(self):
+    def sort_path_by_score_ascending(self):
 
         def sorting_function(path_to_get_distance_for: Path):
-            total_distance = 0
-            for step in path_to_get_distance_for.path:
-                total_distance += step.distance
+            return path_to_get_distance_for.get_distance()
 
-            return total_distance / len(path_to_get_distance_for.path)
-
-        self.similar_paths_in_other_samples = sorted(self.similar_paths_in_other_samples, key=sorting_function)
+        self.similar_paths_in_other_samples = sorted(self.similar_paths_in_other_samples, key=sorting_function,
+                                                     reverse=True)
 
     def add_path_with_one_more_element(self, path_to_extend: Path, id_within_sample_of_new_step: int, distance: float):
         new_path = []

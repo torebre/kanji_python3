@@ -256,13 +256,13 @@ def find_similar_paths2(input_sample_id: int, test_sample: npt.ArrayLike, data: 
         (row_indices_of_closest_lines_across_lookup_examples, first_distances) = find_closest_lines_in_data(angle_diff,
                                                                                                             midpoint_x_diff,
                                                                                                             midpoint_y_diff,
-                                                                                                            data)
+                                                                                                            data,
+                                                                                                            number_of_closest_lines_to_return=10)
         counter = 0
         for index in row_indices_of_closest_lines_across_lookup_examples:
             row = data[index]
-            # sample_indices[(row[3], row[5])] = (index, first_distances[counter])
-
-            paths_to_extend = similar_samples.find_paths_where_last_step_is_matching(int(row[3]), int(row[4]))
+            paths_to_extend = similar_samples.find_paths_where_last_step_is_matching(int(row[3]), int(row[4]),
+                                                                                     int(row[5]))
 
             if len(paths_to_extend) == 0:
                 if not similar_samples.exists_path_starting_with_id(int(row[3])):
@@ -364,7 +364,7 @@ def show_results2(similar_sample: SimilarSamples, samples_in_lookup: List[npt.Ar
     plt.show()
 
     for similar_path in similar_sample.similar_paths_in_other_samples:
-        print(f"Sample ID: {similar_path.sample_id}")
+        # print(f"Sample ID: {similar_path.sample_id}")
 
         lookup_sample = samples_in_lookup[similar_path.sample_id]
         indices_in_sample_list = []
@@ -387,7 +387,7 @@ def show_results2(similar_sample: SimilarSamples, samples_in_lookup: List[npt.Ar
 
         plt.matshow(line_matrix)
         plt.title(
-            f"Sample: {similar_path.sample_id}. Line indices: {similar_path.get_element_ids()}")
+            f"Sample: {similar_path.sample_id}. Line indices: {similar_path.get_element_ids()}\nDistance: {similar_path.get_distance()}")
         plt.show()
 
 
@@ -450,7 +450,7 @@ def search_for_rectangle_experiment_with_multiple_random_lines_rectangle_lines_a
                                number_of_lines_in_test_sample - 4]
     closest_paths: SimilarSamples = find_similar_paths2(0, test_sample, data, indices_of_lines_to_use)
 
-    closest_paths.sort_paths_sorted_by_distance_criteria()
+    closest_paths.sort_path_by_score_ascending()
     show_results2(closest_paths, samples_in_lookup)
 
 
