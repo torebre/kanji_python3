@@ -1,6 +1,6 @@
 import math
 import random
-from typing import Iterable, List, Dict, Tuple, Set
+from typing import List, Dict, Tuple, Set
 
 import numpy as np
 import numpy.typing as npt
@@ -8,8 +8,10 @@ from matplotlib import pyplot as plt
 
 from line_data_generation.generate_training_sample import generate_training_samples
 from line_data_generation.line_relation_data_setup import extract_closest_neighbours_for_line
+from path.similar_samples import SimilarSamples
 from line_utilities.create_line import get_line_matrix
 from visualize.DrawLines import generate_line_coordinates_from_matrix
+
 
 
 def describe_two_lines(line1: npt.ArrayLike, line2: npt.ArrayLike):
@@ -229,24 +231,21 @@ def find_similar_paths(test_sample: npt.ArrayLike, data: npt.NDArray,
     return input_similar_map
 
 
-def find_similar_paths2(test_sample: npt.ArrayLike, data: npt.NDArray,
-                        indices_of_lines_to_use: List[int]) -> Dict[
-    Tuple[int, int], Set[Tuple[int, int]]]:
+def find_similar_paths2(input_sample_id: int, test_sample: npt.ArrayLike, data: npt.NDArray,
+                        indices_of_lines_to_use: List[int]) -> SimilarSamples:
     '''
 
     :param test_sample:
     :param indices_of_lines_to_use
-    :param data:
+    :param data: An array where the columns are angle difference, midpoint x difference, midpoint y difference,
+        sample index, line 1 index within sample and line 2 index within sample
     :return:
     '''
-    # test_sample = np.sort(test_sample, axis=1)
-    # Order the rows representing the lines by length
-    # test_sample = test_sample[test_sample[:, 1].argsort()[::-1]]
-    number_of_closest_neighbours_to_return = 5
-    input_similar_map: Dict[Tuple[int, int], Set[Tuple[int, int, int, int]]] = {}
-
     current_index = indices_of_lines_to_use[0]
-    paths: Dict[int, List[List[Tuple[int, int, int, float]]]] = {}
+    # paths: Dict[int, List[List[Tuple[int, int, int, float]]]] = {}
+    similar_samples: SimilarSamples = SimilarSamples(input_sample_id, test_sample, indices_of_lines_to_use)
+
+    similar_samples.input_sample_id = input_sample_id
 
     for line_index in indices_of_lines_to_use[1:]:
         # Describe the relation between two lines
@@ -259,26 +258,22 @@ def find_similar_paths2(test_sample: npt.ArrayLike, data: npt.NDArray,
                                                                                                             midpoint_x_diff,
                                                                                                             midpoint_y_diff,
                                                                                                             data)
-        sample_indices = {}
         counter = 0
         for index in row_indices_of_closest_lines_across_lookup_examples:
             row = data[index]
-            sample_indices[(row[3], row[5])] = (index, first_distances[counter])
+            # sample_indices[(row[3], row[5])] = (index, first_distances[counter])
 
-            if row[3] not in paths:
-                paths[row[3]] = [[(row[3], row[5], index, first_distances[counter])]]
+            paths_to_extend = similar_samples.find_paths_where_last_step_is_matching(row[3], row[4])
+
+            if len(paths_to_extend) == 0:
+                similar_samples.start_new_path(int(row[3]), int(row[4]), int(row[5]), first_distances[counter])
             else:
-                # A path has already been started
-                for path in paths[row[3]]:
-                    last_step_in_path = path[-1]
-                    if last_step_in_path[0] == row[3] and last_step_in_path[1] == row[4]:
-                        # Add step to path
-                        path.append((row[3], row[5], index, first_distances[counter]))
+                for path in paths_to_extend:
+                    path.extend(int(row[4]), first_distances[counter])
 
-        counter += 1
-        current_index = line_index
+            counter += 1
 
-    return paths
+        return similar_samples
 
     # for index in indices_of_closest_lines_across_lookup_examples2:
     #     row = data[index]
@@ -368,14 +363,14 @@ def show_results(data, index_first_line, input_similar_map, samples_in_lookup,
                 break
 
 
-def show_results2(data, lines_to_use_in_test_sample, test_sample, paths, samples_in_lookup):
+def show_results2(data, similar_sample: SimilarSamples, samples_in_lookup: List[npt.ArrayLike]):
     # Show the input
-    line_coordinates = generate_line_coordinates_from_matrix(test_sample)
+    line_coordinates = generate_line_coordinates_from_matrix(similar_sample.input_sample)
     line_values = []
     counter2 = 0
 
     for counter in range(len(line_coordinates)):
-        if counter in lines_to_use_in_test_sample:
+        if counter in similar_sample.ids_of_input_elements:
             line_values.append(100 + counter2)
             counter2 += 100
         else:
@@ -384,26 +379,24 @@ def show_results2(data, lines_to_use_in_test_sample, test_sample, paths, samples
     line_matrix = get_line_matrix(line_coordinates, line_values)
 
     plt.matshow(line_matrix)
-    plt.title(f"Input: {lines_to_use_in_test_sample}")
+    plt.title(f"Input ID: {similar_sample.input_sample_id}")
     plt.show()
 
-    for path in paths:
-        sample_index = path[0][0]
+    for similar_path in similar_sample.similar_paths_in_other_samples:
+        print(f"Sample ID: {similar_path.sample_id}")
 
-        print("Sample index: ", sample_index)
-        lookup_sample = samples_in_lookup[sample_index.astype(int)]
-
+        lookup_sample = samples_in_lookup[similar_path.sample_id]
         indices_in_sample_list = []
-        for path_element in path:
-            indices_in_sample_list.append(path_element[1])
 
-        indices_in_sample = (indices_in_sample_list)
+        for path_element in similar_path.path:
+            indices_in_sample_list.append(path_element.id_to_within_sample)
+
         line_coordinates = generate_line_coordinates_from_matrix(lookup_sample)
         line_values = []
 
         counter2 = 0
         for counter in range(len(line_coordinates)):
-            if counter in indices_in_sample:
+            if counter in indices_in_sample_list:
                 line_values.append(100 + counter2)
                 counter2 += 100
             else:
@@ -413,7 +406,7 @@ def show_results2(data, lines_to_use_in_test_sample, test_sample, paths, samples
 
         plt.matshow(line_matrix)
         plt.title(
-            f"Sample: {sample_index}. Line indices: {indices_in_sample}")
+            f"Sample: {similar_path.sample_id}. Line indices: {similar_path.get_element_ids()}")
         plt.show()
 
 
@@ -453,7 +446,7 @@ def search_for_rectangle_experiment_with_multiple_random_lines():
     samples_in_lookup = [all_training_samples[i] for i in samples_to_include_in_lookup]
 
     indices_of_lines_to_use = [0, 1, 2, 3]
-    input_similar_map = find_similar_paths2(test_sample, data, indices_of_lines_to_use)
+    input_similar_map = find_similar_paths2(0, test_sample, data, indices_of_lines_to_use)
     # input_similar_map_sorted = {key: value for key, value in sorted(input_similar_map.items(), key = lambda item: item[2] + item[3])}
 
     show_results(data, index_first_line, input_similar_map, samples_in_lookup, test_sample)
@@ -464,30 +457,20 @@ def search_for_rectangle_experiment_with_multiple_random_lines_rectangle_lines_a
 
     all_training_samples = generate_training_samples(100, 50, 10)
     test_sample = all_training_samples[0]
-    index_first_line = len(test_sample) - 1
-
-    # data has all the lines for all the samples except the sample that is going to be used for testing lookup
-    # data = setup_example_rows(range(1, len(training_samples)), training_samples)
 
     samples_to_include_in_lookup = [i for i in range(1, len(all_training_samples))]
     data: npt.NDArray = setup_example_rows(samples_to_include_in_lookup, all_training_samples)
-    samples_in_lookup = [all_training_samples[i] for i in samples_to_include_in_lookup]
+    samples_in_lookup: List[npt.ArrayLike] = [all_training_samples[i] for i in samples_to_include_in_lookup]
 
-    indices_of_lines_to_use = [0, 1, 2, 3]
-    closest_paths = find_similar_paths2(test_sample, data, indices_of_lines_to_use)
+    number_of_lines_in_test_sample = test_sample.shape[0]
+    indices_of_lines_to_use = [number_of_lines_in_test_sample - 1,
+                               number_of_lines_in_test_sample - 2,
+                               number_of_lines_in_test_sample - 3,
+                               number_of_lines_in_test_sample - 4]
+    closest_paths: SimilarSamples = find_similar_paths2(0, test_sample, data, indices_of_lines_to_use)
 
-    # input_similar_map_sorted = {key: value for key, value in sorted(input_similar_map.items(), key = lambda item: item[2] + item[3])}
-
-    def sorting_function(path):
-        total_distance = 0
-        for step in path:
-            total_distance += step[3]
-
-        return total_distance / len(path)
-
-    all_paths = [item for sublist in closest_paths.values() for item in sublist]
-    paths_sorted_by_distance = sorted(all_paths, key=sorting_function)
-    show_results2(data, indices_of_lines_to_use, test_sample, paths_sorted_by_distance, samples_in_lookup)
+    closest_paths.sort_paths_sorted_by_distance_criteria()
+    show_results2(data, closest_paths, samples_in_lookup)
 
 
 if __name__ == "__main__":
