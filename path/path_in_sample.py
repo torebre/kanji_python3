@@ -5,13 +5,13 @@ from path.path_element import PathElement
 
 class Path:
     sample_id: int
-    path: List[PathElement] = []
+    path: List[PathElement]
 
-    def __init__(self, sample_id: int):
+    def __init__(self, sample_id: int, path_steps=None):
+        if path_steps is None:
+            path_steps = []
         self.sample_id = sample_id
-
-    def extend(self, id_within_sample_of_new_step: int, distance: float):
-        self.path.append(PathElement(id_within_sample_of_new_step, distance))
+        self.path = path_steps
 
     def get_element_ids(self) -> List[int]:
         return [sample.id_to_within_sample for sample in self.path]

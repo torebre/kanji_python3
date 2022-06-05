@@ -13,7 +13,6 @@ from line_utilities.create_line import get_line_matrix
 from visualize.DrawLines import generate_line_coordinates_from_matrix
 
 
-
 def describe_two_lines(line1: npt.ArrayLike, line2: npt.ArrayLike):
     """
         Angle, line length, start x coordinate, start y coordinate, stop x coordinate, stop y coordinate
@@ -263,37 +262,19 @@ def find_similar_paths2(input_sample_id: int, test_sample: npt.ArrayLike, data: 
             row = data[index]
             # sample_indices[(row[3], row[5])] = (index, first_distances[counter])
 
-            paths_to_extend = similar_samples.find_paths_where_last_step_is_matching(row[3], row[4])
+            paths_to_extend = similar_samples.find_paths_where_last_step_is_matching(int(row[3]), int(row[4]))
 
             if len(paths_to_extend) == 0:
-                similar_samples.start_new_path(int(row[3]), int(row[4]), int(row[5]), first_distances[counter])
+                if not similar_samples.exists_path_starting_with_id(int(row[3])):
+                    similar_samples.start_new_path(int(row[3]), int(row[4]), int(row[5]), first_distances[counter])
             else:
                 for path in paths_to_extend:
-                    path.extend(int(row[4]), first_distances[counter])
+                    similar_samples.add_path_with_one_more_element(path, int(row[5]),
+                                                                   first_distances[counter])
 
             counter += 1
 
-        return similar_samples
-
-    # for index in indices_of_closest_lines_across_lookup_examples2:
-    #     row = data[index]
-    #     key = (row[3], row[4])
-    #     # sample_indices2[(row[3], row[5])] = index
-    #
-    #     if key in sample_indices:
-    #         # If there is a pair of lines in the first step where the second line is
-    #         # the same as the first line in the second step, then add it here
-    #         # to add one step to the path started in the first step
-    #         index_of_first_line, distance_for_first_step = sample_indices[key]
-    #         similar_line_configurations.add((
-    #             index_of_first_line, index, distance_for_first_step, second_distances[counter2]))
-    #
-    #     counter2 += 1
-    #
-    # if len(similar_line_configurations) != 0:
-    #     input_similar_map[(second_line_in_path, third_line_in_path)] = similar_line_configurations
-
-    # return input_similar_map
+    return similar_samples
 
 
 def show_results(data, index_first_line, input_similar_map, samples_in_lookup,
@@ -363,7 +344,7 @@ def show_results(data, index_first_line, input_similar_map, samples_in_lookup,
                 break
 
 
-def show_results2(data, similar_sample: SimilarSamples, samples_in_lookup: List[npt.ArrayLike]):
+def show_results2(similar_sample: SimilarSamples, samples_in_lookup: List[npt.ArrayLike]):
     # Show the input
     line_coordinates = generate_line_coordinates_from_matrix(similar_sample.input_sample)
     line_values = []
@@ -470,7 +451,7 @@ def search_for_rectangle_experiment_with_multiple_random_lines_rectangle_lines_a
     closest_paths: SimilarSamples = find_similar_paths2(0, test_sample, data, indices_of_lines_to_use)
 
     closest_paths.sort_paths_sorted_by_distance_criteria()
-    show_results2(data, closest_paths, samples_in_lookup)
+    show_results2(closest_paths, samples_in_lookup)
 
 
 if __name__ == "__main__":

@@ -25,7 +25,16 @@ class SimilarSamples:
             if sample_id != path.sample_id:
                 continue
 
-            if path.path[-1] == id_last_path_element:
+            step_already_in_path = False
+            for path_step in path.path[:-1]:
+                if path_step.id_to_within_sample == id_last_path_element:
+                    step_already_in_path = True
+                    break
+
+            if step_already_in_path:
+                continue
+
+            if path.path[-1].id_to_within_sample == id_last_path_element:
                 matching_paths.append(path)
 
         return matching_paths
@@ -55,4 +64,11 @@ class SimilarSamples:
             new_path.append(PathElement(path_step.id_to_within_sample, path_step.distance))
         new_path.append(PathElement(id_within_sample_of_new_step, distance))
 
-        self.similar_paths_in_other_samples.append(new_path)
+        self.similar_paths_in_other_samples.append(Path(path_to_extend.sample_id, new_path))
+
+    def exists_path_starting_with_id(self, id_within_sample_of_new_step: int) -> bool:
+        for similar_path in self.similar_paths_in_other_samples:
+            if similar_path.path[0].id_to_within_sample == id_within_sample_of_new_step:
+                return True
+
+        return False
