@@ -250,6 +250,7 @@ def find_similar_paths2(input_sample_id: int, test_sample: npt.ArrayLike, data: 
         # Describe the relation between two lines
         first_line_in_relation = test_sample[current_index]
         second_line_in_relation = test_sample[line_index]
+
         (angle_diff, midpoint_x_diff, midpoint_y_diff) = describe_two_lines(first_line_in_relation,
                                                                             second_line_in_relation)
         # Look for similar relations between lines in the data set
