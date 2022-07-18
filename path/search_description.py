@@ -7,6 +7,8 @@ from path.similar_samples import SimilarSamples
 
 
 class SearchStep:
+    index_of_first_line: int
+    index_of_second_line: int
     first_line_in_relation: npt.ArrayLike
     second_line_in_relation: npt.ArrayLike
 

@@ -242,7 +242,6 @@ def find_similar_paths2(input_sample_id: int, test_sample: npt.ArrayLike, data: 
     :return:
     '''
     current_index = indices_of_lines_to_use[0]
-    # paths: Dict[int, List[List[Tuple[int, int, int, float]]]] = {}
     similar_samples: SimilarSamples = SimilarSamples(input_sample_id, test_sample, indices_of_lines_to_use)
 
     similar_samples.input_sample_id = input_sample_id
@@ -254,6 +253,9 @@ def find_similar_paths2(input_sample_id: int, test_sample: npt.ArrayLike, data: 
     for line_index in indices_of_lines_to_use[1:]:
         search_step = SearchStep()
         search_description.search_steps.append(search_step)
+
+        search_step.index_of_first_line = current_index
+        search_step.index_of_second_line = line_index
 
         # Describe the relation between two lines
         first_line_in_relation = test_sample[current_index]
@@ -292,6 +294,8 @@ def find_similar_paths2(input_sample_id: int, test_sample: npt.ArrayLike, data: 
                                                                    first_distances[counter])
 
             counter += 1
+
+        current_index = line_index
 
     return similar_samples, search_description
 
@@ -425,79 +429,69 @@ def get_line_matrix_for_sample(input_sample: SimilarSamples) -> npt.ArrayLike:
     return get_line_matrix(line_coordinates, line_values)
 
 
-def show_results_with_search_description(similar_sample: SimilarSamples, samples_in_lookup: List[npt.ArrayLike], data: npt.NDArray, search_description: SearchDescription):
-    line_matrix = get_line_matrix_for_sample(search_description.similar_samples)
-
+def show_results_with_search_description(similar_sample: SimilarSamples, samples_in_lookup: List[npt.ArrayLike],
+                                         data: npt.NDArray, search_description: SearchDescription):
+    search_step_count = 0
 
     for search_step in search_description.search_steps:
-        plot1 = plt.subplot2grid((3, 3), (0, 0), colspan=2)
-        plot2 = plt.subplot2grid((3, 3), (0, 2), rowspan=3, colspan=2)
-        plot3 = plt.subplot2grid((3, 3), (1, 0), rowspan=2)
+        line_coordinates = generate_line_coordinates_from_matrix(similar_sample.input_sample)
+
+        line_values = {key: 10 for key in range(len(line_coordinates))}
+        line_values[search_step.index_of_first_line] = 100
+        line_values[search_step.index_of_second_line] = 100
+
+        line_matrix = get_line_matrix(line_coordinates, line_values)
+
+        input_sample = plt.subplot2grid((5, 5), (0, 0), rowspan=3, colspan=3)
+        input_sample.axis('off')
+        plot2 = plt.subplot2grid((5, 5), (0, 3), rowspan=1, colspan=1)
+        plot2.axis('off')
+        plot3 = plt.subplot2grid((5, 5), (1, 3), rowspan=1, colspan=1)
+        plot3.axis('off')
 
         # Show the input
-        plot1.matshow(line_matrix)
-        plot1.set_title(f"Input ID: {similar_sample.input_sample_id}")
+        input_sample.matshow(line_matrix)
+        input_sample.set_title(f"ID: {similar_sample.input_sample_id}. Step: {search_step_count}")
+        search_step_count += 1
 
         sample_line_markings_map: Dict[int, List[Tuple]] = {}
 
         for row_index in search_step.row_indices_of_closest_lines_across_lookup_examples:
             row = data[row_index]
 
-            # Look up sample
-
-            # Mark lines that are similar in that sample
-
             sample_index = int(row[3])
             if sample_index not in sample_line_markings_map:
                 sample_line_markings_map[int(row[3])] = []
 
+        for key in sample_line_markings_map:
+
+            if key == 1:
+                continue
+
+            line_markings = sample_line_markings_map[key]
+
             sample_line_markings_map[int(row[3])].append((int(row[4]), int(row[5])))
 
-        lookup_sample = samples_in_lookup[sample_index]
-        line_coordinates = generate_line_coordinates_from_matrix(lookup_sample)
-        line_values = []
+            lookup_sample = samples_in_lookup[sample_index]
+            line_coordinates = generate_line_coordinates_from_matrix(lookup_sample)
+            line_values = {key: 10 for key in range(len(line_coordinates))}
 
-        counter2 = 0
-        # for counter in range(len(line_coordinates)):
-        #     if counter in indices_in_sample_list:
-        #         line_values.append(100 + counter2)
-        #         counter2 += 100
-        #     else:
-        #         line_values.append(10)
+            counter = 100
+            for line_marking in line_markings:
+                line_values[line_marking[0]] = counter
+                line_values[line_marking[1]] = counter
 
-        line_matrix = get_line_matrix(line_coordinates, line_values)
-        plt.matshow(line_matrix)
+                counter += 100
+
+            line_matrix_lookup_sample = get_line_matrix(line_coordinates, line_values)
+
+            plot2.matshow(line_matrix_lookup_sample)
+
+            # TODO
+            break
 
         plt.show()
 
-
-
-    for similar_path in similar_sample.similar_paths_in_other_samples:
-        # print(f"Sample ID: {similar_path.sample_id}")
-
-        lookup_sample = samples_in_lookup[similar_path.sample_id]
-        indices_in_sample_list = []
-
-        for path_element in similar_path.path:
-            indices_in_sample_list.append(path_element.id_to_within_sample)
-
-        line_coordinates = generate_line_coordinates_from_matrix(lookup_sample)
-        line_values = []
-
-        counter2 = 0
-        for counter in range(len(line_coordinates)):
-            if counter in indices_in_sample_list:
-                line_values.append(100 + counter2)
-                counter2 += 100
-            else:
-                line_values.append(10)
-
-        line_matrix = get_line_matrix(line_coordinates, line_values)
-
-        plt.matshow(line_matrix)
-        plt.title(
-            f"Sample: {similar_path.sample_id}. Line indices: {similar_path.get_element_ids()}\nDistance: {similar_path.get_distance()}")
-        plt.show()
 
 # def search_for_rectangle_experiment_with_one_random_line():
 #     random.seed(1)
@@ -554,9 +548,9 @@ def search_for_rectangle_experiment_with_multiple_random_lines_rectangle_lines_a
 
     number_of_lines_in_test_sample = test_sample.shape[0]
     indices_of_lines_to_use = [number_of_lines_in_test_sample - 1,
-                               number_of_lines_in_test_sample - 2,
                                number_of_lines_in_test_sample - 3,
-                               number_of_lines_in_test_sample - 4]
+                               number_of_lines_in_test_sample - 4,
+                               number_of_lines_in_test_sample - 2]
     (closest_paths, search_description) = find_similar_paths2(0, test_sample, data, indices_of_lines_to_use)
 
     closest_paths.sort_path_by_score_ascending()
